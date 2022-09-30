@@ -1,0 +1,3 @@
+Virtual environment: rosecharter (C:\Users\gabri\Documents\Python Virtual Environments\templatebuilder\Scripts\activate)
+
+pyinstaller "C:\Users\gabri\OneDrive\LabMap\Template Builder\template-builder-rep\TemplateBuilderApp.py" --distpath="C:\Users\gabri\OneDrive\LabMap\Template Builder" --upx-dir="C:\Users\gabri\OneDrive\LabMap\lib\upx-3.96-win64" --clean --onefile --noconsole --icon="C:\Users\gabri\OneDrive\LabMap\Template Builder\template-builder-rep\icons\book.ico"

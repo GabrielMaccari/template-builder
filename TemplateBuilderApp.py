@@ -228,7 +228,7 @@ class MyApp(QWidget):
                               'UTM_N':{'name':'UTM_N','dtype':'float64','null_allowed':False},
                               'Altitude':{'name':'Altitude','dtype':'float64','null_allowed':True},
                               'Disciplina':{'name':'Disciplina','dtype':'object','null_allowed':False},
-                              'Data':{'name':'Data','dtype':'datetime64','null_allowed':False},
+                              'Data':{'name':'Data','dtype':'datetime64[ns]','null_allowed':False},
                               'Equipe':{'name':'Equipe','dtype':'object','null_allowed':False},
                               'Toponimia':{'name':'Toponimia','dtype':'object','null_allowed':True},
                               'Ponto_de_controle':{'name':'Ponto_de_controle','dtype':'object','null_allowed':False},

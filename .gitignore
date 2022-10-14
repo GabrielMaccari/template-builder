@@ -168,3 +168,8 @@ cython_debug/
 *README.html
 *README_cache/
 #*README_files/
+.idea/inspectionProfiles/profiles_settings.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/template-builder-rep.iml
+.idea/vcs.xml

@@ -225,8 +225,8 @@ class MyApp(QWidget):
                     error_lbl = 'O arquivo selecionado está vazio.'
                     raise Exception('File contains zero rows')
                 else:
-                    self.filePromptLabel.setText('Arquivo carregado com '+
-                                                 'sucesso.')
+                    file_name = self.file_path.split('/')
+                    self.filePromptLabel.setText(file_name[-1])
                     self.filePromptLabel.setStyleSheet('QLabel {color: green}')
                     self.nRows.setText(str(rows))
                     self.check_columns()
@@ -373,6 +373,11 @@ class MyApp(QWidget):
 
     # Monta o arquivo do word
     def build_template(self):
+
+        # Recarrega o template, por garantia
+        self.style_template = self.load_dependency('templates/' +
+                                                   'style_template.docx')
+
         document = None
         document = self.style_template
         dataframe = self.df

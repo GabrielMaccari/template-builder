@@ -255,67 +255,84 @@ class MyApp(QWidget):
         essential_columns = {'Ponto':
                                 {'name': 'Ponto',
                                  'dtype': 'object',
-                                 'null_allowed': False},
+                                 'null_allowed': False,
+                                 'domain':[]},
                              'Easting':
                                  {'name': 'Easting',
                                   'dtype': 'float64',
-                                  'null_allowed': False},
+                                  'null_allowed': False,
+                                  'domain':[]},
                              'Northing':
-                                 {'name': 'Easting',
+                                 {'name': 'Northing',
                                   'dtype': 'float64',
-                                  'null_allowed': False},
+                                  'null_allowed': False,
+                                  'domain':[]},
                              'SRC':
                                  {'name': 'SRC',
                                   'dtype': 'object',
-                                  'null_allowed': False},
+                                  'null_allowed': False,
+                                  'domain':[]},
                              'Altitude':
                                  {'name': 'Altitude',
                                   'dtype': 'float64',
-                                  'null_allowed': True},
+                                  'null_allowed': True,
+                                  'domain':[]},
                              'Disciplina':
                                  {'name': 'Disciplina',
                                   'dtype': 'object',
-                                  'null_allowed': False},
+                                  'null_allowed': False,
+                                  'domain':['Mapeamento Geológico I',
+                                            'Mapeamento Geológico II']},
                              'Data':
                                  {'name': 'Data',
                                   'dtype': 'datetime64[ns]',
-                                  'null_allowed': False},
+                                  'null_allowed': False,
+                                  'domain':[]},
                              'Equipe':
                                  {'name': 'Equipe',
                                   'dtype': 'object',
-                                  'null_allowed': False},
+                                  'null_allowed': False,
+                                  'domain':[]},
                              'Toponimia':
                                  {'name': 'Toponimia',
                                   'dtype': 'object',
-                                  'null_allowed': True},
+                                  'null_allowed': True,
+                                  'domain':[]},
                              'Ponto_de_controle':
                                  {'name': 'Ponto_de_controle',
                                   'dtype': 'object',
-                                  'null_allowed': False},
+                                  'null_allowed': False,
+                                  'domain':['Sim','Não']},
                              'Numero_de_amostras':
                                  {'name': 'Numero_de_amostras',
                                   'dtype': 'int64',
-                                  'null_allowed': False},
+                                  'null_allowed': False,
+                                  'domain':[]},
                              'Tipo_de_afloramento':
                                  {'name': 'Tipo_de_afloramento',
                                   'dtype': 'object',
-                                  'null_allowed': True},
+                                  'null_allowed': True,
+                                  'domain':[]},
                              'In_situ':
                                  {'name': 'In_situ',
                                   'dtype': 'object',
-                                  'null_allowed': True},
+                                  'null_allowed': True,
+                                  'domain':['Sim','Não']},
                              'Grau_de_intemperismo':
                                  {'name': 'Grau_de_intemperismo',
                                   'dtype': 'object',
-                                  'null_allowed': True},
+                                  'null_allowed': True,
+                                  'domain':['Baixo','Médio','Alto']},
                              'Unidade':
                                  {'name': 'Unidade',
                                   'dtype': 'object',
-                                  'null_allowed': True},
+                                  'null_allowed': True,
+                                  'domain':[]},
                              'Unidade_litoestratigrafica':
                                  {'name': 'Unidade_litoestratigrafica',
                                   'dtype': 'object',
-                                  'null_allowed': True},
+                                  'null_allowed': True,
+                                  'domain':[]},
                              }
 
         columns = self.df.columns.to_list()
@@ -332,21 +349,43 @@ class MyApp(QWidget):
                     # Se der certo, muda a label de status para verde
                     self.statusLabels[i].setText('OK')
                     self.statusLabels[i].setStyleSheet('QLabel {color: green}')
-                    # Caso a coluna não permita nulos e haja células vazias,
-                    # muda a label de status para laranja e bloqueia o avanço
-                    if not essential_columns[c]['null_allowed'] and \
-                            self.df[c].isnull().values.any():
-                        self.statusLabels[i].setText('Há células vazias')
-                        self.statusLabels[i].setStyleSheet('QLabel {color: '+
-                                                           'orange}')
-                        self.columns_ok = False
+
                 # Caso não dê pra converter a coluna para o tipo de dado
                 # desejado, significa que há dados incorretos. Nesse caso, muda
                 # a label de status para laranja e bloqueia o avanço
-                except:
+                except ValueError:
                     self.statusLabels[i].setText('Fora de formato')
                     self.statusLabels[i].setStyleSheet('QLabel {color: orange}')
                     self.columns_ok = False
+
+                # Caso a coluna não permita nulos e haja células vazias,
+                # muda a label de status para laranja e bloqueia o avanço
+                if not essential_columns[c]['null_allowed'] and \
+                        self.df[c].isnull().values.any():
+                    self.statusLabels[i].setText('Células vazias')
+                    self.statusLabels[i].setStyleSheet('QLabel {color: '+
+                                                       'orange}')
+                    self.columns_ok = False
+
+                try:
+                    # Verifica se os campos que possuem entrada limitada estão
+                    # preenchidos apenas com os valores permitidos
+                    if len(essential_columns[c]['domain']) > 0:
+                        column_values = self.df[c]
+                        if essential_columns[c]['null_allowed']==True:
+                            column_values.dropna(inplace=True)
+                        if not column_values.isin(
+                                essential_columns[c]['domain']).all():
+                            raise ValueError(f'Campo "{c}" deve ser '
+                                f'preenchido com um dos seguintes valores: '
+                                f'{essential_columns[c]["domain"]}.'
+                            )
+
+                except ValueError:
+                    self.statusLabels[i].setText('Valores inválidos')
+                    self.statusLabels[i].setStyleSheet('QLabel {color: orange}')
+                    self.columns_ok = False
+
             # Se a coluna estiver faltando na tabela, muda a label de status
             # para vermelho e bloqueia o avanço
             else:
@@ -411,7 +450,9 @@ class MyApp(QWidget):
                            else column_list[18:33])
 
         # Retira as timestamps das datas
-        dataframe['Data'] = pandas.to_datetime(dataframe.Data, errors='coerce')
+        dataframe['Data'] = pandas.to_datetime(dataframe.Data,
+                                               errors='coerce',
+                                               dayfirst=True)
         dataframe['Data'] = dataframe['Data'].dt.strftime('%d/%m/%Y')
 
         # Deleta o primeiro parágrafo do template
@@ -659,7 +700,7 @@ class MyApp(QWidget):
             try:
                 document.save(output_path)
                 msg = QMessageBox(parent=self, text='Template criado com '+
-                        f'sucesso! O arquivo foi salvo em "{output_path}".')
+                        f'sucesso!')
                 msg.setWindowTitle("Sucesso")
             except:
                 msg = QMessageBox(parent=self, text='Ocorreu um erro ao salvar'+

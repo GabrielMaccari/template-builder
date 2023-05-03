@@ -3,6 +3,8 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+*.exe
+
 # C extensions
 *.so
 
@@ -168,8 +170,9 @@ cython_debug/
 *README.html
 *README_cache/
 #*README_files/
-.idea/inspectionProfiles/profiles_settings.xml
-.idea/misc.xml
-.idea/modules.xml
-.idea/template-builder-rep.iml
-.idea/vcs.xml
+
+# PyCharm project folder
+.idea/
+
+dados_teste.xlsx
+

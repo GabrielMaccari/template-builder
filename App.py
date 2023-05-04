@@ -11,10 +11,7 @@ from View import JanelaPrincipalApp
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-
-    with open("recursos_app/estilos/estilo.qss", 'r') as f:
-        estilo = f.read()
-    app.setStyleSheet(estilo)
+    app.setStyle("fusion")
 
     window = JanelaPrincipalApp()
     window.show()

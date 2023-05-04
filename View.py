@@ -3,22 +3,21 @@
 @author: Gabriel Maccari
 """
 
-import os
 import sys
 from PyQt6.QtWidgets import *
 from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import Qt
 from docx.opc.exceptions import PackageNotFoundError
 
-from Controller import *
+from Controller import ControladorPrincipal, COLUNAS_TABELA_CADERNETA
 
 
 class JanelaPrincipalApp(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        # Carrega o template de estilos da caderneta e ins
-        template = f"{os.getcwd()}/recursos_app/modelos/template_estilos.docx"
+        # Carrega o template de estilos da caderneta e instancia o controlador
+        template = f"recursos_app/modelos/template_estilos.docx"
         try:
             self.controlador = ControladorPrincipal(template)
         except PackageNotFoundError:
@@ -74,12 +73,23 @@ class JanelaPrincipalApp(QMainWindow):
             lin = lin + 1 if lin != 8 else 0
 
         # Rótulos para exibir o número de linhas (pontos meapeados) na tabela
-        rotulo_num_pontos = QLabel("Número de pontos: ")
+        rotulo_num_pontos = QLabel("Número de pontos na tabela: ")
         self.num_pontos = QLabel("-")
         self.num_pontos.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         layout_central.addWidget(rotulo_num_pontos, 9, 0)
         layout_central.addWidget(self.num_pontos, 9, 1)
+
+        # Linha que separa a porção central da porção inferior da interface
+        separador2 = QFrame(None)
+        separador2.setLineWidth(1)
+        separador2.setFrameShape(QFrame.Shape.HLine)
+        separador2.setFrameShadow(QFrame.Shadow.Sunken)
+
+        # Checkbox para marcar se gera ou não a folha de rosto
+        self.checkbox_folha_rosto = QCheckBox("Incluir folha de rosto no início da caderneta")
+        self.checkbox_folha_rosto.setToolTip("Gera uma página com informações do projeto no início da caderneta")
+        self.checkbox_folha_rosto.setChecked(True)
 
         # Botão para gerar e exportar o template da caderneta
         self.botao_gerar_modelo = QPushButton("Gerar caderneta")
@@ -87,9 +97,9 @@ class JanelaPrincipalApp(QMainWindow):
         self.botao_gerar_modelo.clicked.connect(self.botao_gerar_caderneta_clicado)
         self.botao_gerar_modelo.setEnabled(False)
 
-        # Rótulo dos créditos e informação de contato do autor
-        rotulo_copyright = QLabel("© 2023 Gabriel Maccari <gabriel.maccari@hotmail.com>")
-        rotulo_copyright.setStyleSheet("font-size: 7.5pt")
+        """# Rótulo dos créditos e informação de contato do autor
+        rotulo_copyright = QLabel("© 2023 Gabriel Maccari")
+        # rotulo_copyright.setStyleSheet("font-size: 7.5pt")"""
 
         # Layout mestre (aninha os widgets e demais layouts)
         layout_principal = QVBoxLayout()
@@ -98,8 +108,10 @@ class JanelaPrincipalApp(QMainWindow):
         layout_principal.addLayout(layout_superior)
         layout_principal.addWidget(separador)
         layout_principal.addLayout(layout_central)
+        layout_principal.addWidget(separador2)
+        layout_principal.addWidget(self.checkbox_folha_rosto)
         layout_principal.addWidget(self.botao_gerar_modelo)
-        layout_principal.addWidget(rotulo_copyright)
+        # layout_principal.addWidget(rotulo_copyright)
 
         # Painel contendo o layout
         container = QWidget(self)
@@ -117,8 +129,7 @@ class JanelaPrincipalApp(QMainWindow):
             arquivo_aberto, num_pontos = False, "-"
             caminho = mostrar_dialogo_arquivo(
                 "Selecione uma tabela contendo os dados de entrada.",
-                "*.xlsx *.xlsm;;",
-                modo="abrir"
+                "Pasta de trabalho do Excel (*.xlsx);;Pasta de trabalho habilitada para macro do Excel (*.xlsm);;"
             )
             if caminho != "":
                 arquivo_aberto, num_pontos = self.controlador.abrir_tabela(caminho)
@@ -178,7 +189,8 @@ class JanelaPrincipalApp(QMainWindow):
         """
         try:
             mostrar_cursor_espera()
-            self.controlador.gerar_caderneta()
+            montar_folha_de_rosto = self.checkbox_folha_rosto.isChecked()
+            self.controlador.gerar_caderneta(montar_folha_de_rosto)
             mostrar_cursor_espera(False)
             caminho = mostrar_dialogo_arquivo("Salvar documento da caderneta", "*.docx", modo="salvar")
             if caminho != "":
@@ -189,7 +201,7 @@ class JanelaPrincipalApp(QMainWindow):
 
 
 class BotaoStatus(QPushButton):
-    def __init__(self, coluna, parent, status="none"):
+    def __init__(self, coluna: str, parent: QMainWindow, status: str = "none"):
         super().__init__()
         self.coluna = coluna
         self.parent = parent
@@ -205,7 +217,7 @@ class BotaoStatus(QPushButton):
         )
         self.definir_status(status)
 
-    def definir_status(self, status):
+    def definir_status(self, status: str):
         """
         Define o ícone e a tooltip do botão. Conecta à função icone_status_clicado caso o status não seja "none" ou "ok".
         :param status: O status da coluna ("none", "ok", "faltando", "problemas", "nulos" ou "dominio")
@@ -254,7 +266,15 @@ class BotaoStatus(QPushButton):
             self.clicked.connect(lambda: self.parent.icone_status_clicado(self.coluna, self.status))
 
 
-def mostrar_dialogo_arquivo(titulo: str, filtro: str, modo="abrir", parent=None):
+def mostrar_dialogo_arquivo(titulo: str, filtro: str, modo="abrir", parent: QMainWindow = None):
+    """
+    Abre um diálogo de seleção/salvamento de arquivo.
+    :param titulo: O título da janela.
+    :param filtro: Filtros de tipo de arquivo (Ex: "Planilha do Excel (*.xlsx);;Planilha com macro do Excel (*.xlsm)")
+    :param modo: "abrir" ou "salvar". Define se o diálogo será de abertura ou salvamento de arquivo.
+    :param parent: A janela pai (Default = None).
+    :returns: Nada.
+    """
     dialog = QFileDialog(parent)
     if modo == "abrir":
         caminho, tipo = dialog.getOpenFileName(
@@ -267,26 +287,32 @@ def mostrar_dialogo_arquivo(titulo: str, filtro: str, modo="abrir", parent=None)
     return caminho
 
 
-def mostrar_dialogo_selecao(mensagem: str, itens: list, padrao=0, titulo="Selecionar opções", parent=None):
-    dialog = QInputDialog(parent)
-    escolha, ok = dialog.getItem(parent, titulo, mensagem, itens, padrao, editable=False)
-    return escolha, ok
-
-
-def mostrar_cursor_espera(ativar=True):
+def mostrar_cursor_espera(ativar: bool = True):
+    """
+    Troca o cursor do mouse por um cursor de espera.
+    :param ativar: Default True. False para restaurar o cursor normal.
+    :returns: Nada.
+    """
     if ativar:
         QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
     else:
         QApplication.restoreOverrideCursor()
 
 
-def mostrar_popup(mensagem: str, tipo_msg: str = "notificacao", parent=None):
-    popup_types = {
+def mostrar_popup(mensagem: str, tipo_msg: str = "notificacao", parent: QMainWindow = None):
+    """
+    Mostra uma popup com uma mensagem ao usuário.
+    :param mensagem: A mensagem a ser exibida na popup.
+    :param tipo_msg: "notificacao" ou "erro" (define o ícone da popup). O valor padrão é "notificacao".
+    :param parent: A janela pai (Default = None).
+    :returns: Nada.
+    """
+    tipos_popup = {
         "notificacao": {"titulo": "Notificação", "icone": "recursos_app/icones/info.png"},
         "erro":        {"titulo": "Erro",        "icone": "recursos_app/icones/error.png"}
     }
-    title = popup_types[tipo_msg]["titulo"]
-    icon = QIcon(popup_types[tipo_msg]["icone"])
+    title = tipos_popup[tipo_msg]["titulo"]
+    icon = QIcon(tipos_popup[tipo_msg]["icone"])
 
     popup = QMessageBox(parent)
     popup.setText(mensagem)

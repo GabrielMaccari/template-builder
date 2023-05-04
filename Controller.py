@@ -66,8 +66,9 @@ COLUNAS_TABELA_CADERNETA = {
 
 
 class ControladorPrincipal:
-    def __init__(self, template: str, df: pandas.DataFrame = None):
-        self.template = docx.Document(template)
+    def __init__(self, caminho_template: str, df: pandas.DataFrame = None):
+        self.caminho_template = caminho_template
+        self.template = docx.Document(caminho_template)
         self.df = df
         self.caderneta = None
 
@@ -84,6 +85,10 @@ class ControladorPrincipal:
             "tabela_direita": self.template.styles['Tabela - Coluna direita'],
             "tabela_cabecalho": self.template.styles['Tabela de cabeçalho'],
         }
+
+    def recarregar_template(self):
+        self.template = None
+        self.template = docx.Document(self.caminho_template)
 
     def abrir_tabela(self, caminho: str) -> object:
         """
@@ -163,25 +168,20 @@ class ControladorPrincipal:
         :returns: Lista contendo os indexes das linhas com problema.
         """
         valores = self.df[coluna].dropna()
-        tipo = COLUNAS_TABELA_CADERNETA[coluna]["dtype"]
+        tipo_alvo = COLUNAS_TABELA_CADERNETA[coluna]["dtype"]
 
-        conversao = {
+        funcoes_conversao = {
             "datetime64[ns]": pandas.to_datetime(valores, errors="coerce", format="%d/%m/%Y").isna(),
             "float64": pandas.to_numeric(valores, errors="coerce", downcast="float").isna(),
             "int64": pandas.to_numeric(valores, errors="coerce", downcast="integer").isna()
         }
 
-        if tipo not in conversao:
-            raise Exception(f"Checagem não implementada para o tipo de dado ({tipo})")
+        if tipo_alvo not in funcoes_conversao:
+            raise Exception(f"Checagem não implementada para o tipo de dado ({tipo_alvo})")
 
         # Valores que não podem ser convertidos tornam-se NaN devido ao "coerce"
-        nans = conversao[tipo]
-
-        indices_problemas = []
-        for i, tem_problema in zip(nans.index, nans.values):
-            if not tem_problema:
-                continue
-            indices_problemas.append(i)
+        convertido = funcoes_conversao[tipo_alvo]
+        indices_problemas = [i for i, is_nan in zip(convertido.index, convertido.values) if is_nan]
         return indices_problemas
 
     def localizar_celulas_vazias(self, coluna: str) -> list[int]:
@@ -190,7 +190,8 @@ class ControladorPrincipal:
         :param coluna: O nome da coluna a ser verificada.
         :returns: Lista contendo os indexes das linhas com problema.
         """
-        indices_problemas = self.df[self.df[coluna].isnull()].index.tolist()
+        valores_coluna = self.df.loc[:, coluna]
+        indices_problemas = self.df[valores_coluna.isnull()].index.tolist()
         return indices_problemas
 
     def localizar_problemas_dominio(self, coluna: str) -> list[int]:
@@ -199,10 +200,9 @@ class ControladorPrincipal:
         :param coluna: O nome da coluna a ser verificada.
         :returns: Lista contendo os indexes das linhas com problema.
         """
-        valores_coluna = self.df[coluna]
+        valores_coluna = self.df.loc[:, coluna]
         dominio = COLUNAS_TABELA_CADERNETA[coluna]["dominio"]
-        linhas_problemas = valores_coluna[~valores_coluna.isin(dominio)]
-        indices_problemas = linhas_problemas.index.to_list()
+        indices_problemas = valores_coluna.index[~valores_coluna.isin(dominio)].tolist()
         return indices_problemas
 
     def montar_msg_problemas(self, tipo_problema: str, coluna: str, indices: list[int]) -> str:
@@ -235,21 +235,26 @@ class ControladorPrincipal:
             )
         }
 
-        msg = tipos_problemas[tipo_problema]
+        mensagem = [tipos_problemas.get(tipo_problema)]
 
         for i in indices:
             linha = i + 2
             ponto = self.df.loc[i, ["Ponto"]].values[0]
-            msg += f"\nLinha {linha} (ponto {ponto})"
+            mensagem.append(f"Linha {linha} (ponto {ponto})")
 
-        return msg
+        return "\n".join(mensagem)
 
-    def gerar_caderneta(self, folha_de_rosto: bool = True):
+    def gerar_caderneta(self, montar_folha_de_rosto: bool = True):
         """
         Gera a caderneta pré-preenchida.
         :param folha_de_rosto: Opção para gerar ou não uma folha de rosto.
         :returns: Nada.
         """
+        # Limpa todos os objetos da classe docx.Document para evitar bugs comuns
+        self.recarregar_template()
+        self.caderneta = None
+        documento = None
+
         documento = self.template
         df = self.df
         colunas_tabela = df.columns.to_list()
@@ -273,16 +278,15 @@ class ControladorPrincipal:
         paragraph._p = paragraph._element = None
 
         # Monta a folha de rosto da caderneta
-        if folha_de_rosto:
+        if montar_folha_de_rosto:
             documento = self.montar_folha_rosto(documento)
 
         d = 1  # Número sequencial do mestre/disciplina. Ex: Map1 = 1
         disciplinas = COLUNAS_TABELA_CADERNETA["Disciplina"]["dominio"]
 
         for linha in df.itertuples():
-
             # Adiciona uma página de título antes do primeiro ponto de cada semestre/disciplina
-            if d <= 2 and linha.Disciplina == disciplinas[d-1]:
+            if d <= 2 and linha.Disciplina == disciplinas[d-1]: # TODO bug aqui
                 documento = self.montar_pagina_semestre(documento, linha.Disciplina)
                 d += 1
 
@@ -326,7 +330,10 @@ class ControladorPrincipal:
         :param disciplina: "Mapeamento Geológico I" ou "Mapeamento Geológico II".
         :returns: O documento com a página de título do semestre.
         """
-        documento.paragraphs[-1].add_run().add_break(docx.enum.text.WD_BREAK.PAGE)
+        try:  # Quando não há folha de rosto, o documento está inicialmente vazio, e isso causa um IndexError
+            documento.paragraphs[-1].add_run().add_break(docx.enum.text.WD_BREAK.PAGE)
+        except IndexError:
+            pass
         for i in range(0, 18):
             documento.add_paragraph(text='', style=self.estilos["normal"])
         documento.add_heading(text=disciplina, level=1)
@@ -346,14 +353,16 @@ class ControladorPrincipal:
         # Valores das colunas para a linha
         ponto = linha.Ponto
         src = linha.SRC
-        easting, northing = linha.Easting, linha.Northing
+        easting = linha.Easting
+        northing = linha.Northing
         altitude = linha.Altitude
         toponimia = linha.Toponimia
         data = linha.Data
         equipe = linha.Equipe
         ponto_controle = linha.Ponto_de_controle
         num_amostras = linha.Numero_de_amostras
-        possui_croquis, possui_fotos = linha.Possui_croquis, linha.Possui_fotos
+        possui_croquis = linha.Possui_croquis
+        possui_fotos = linha.Possui_fotos
         tipo_afloramento = linha.Tipo_de_afloramento
         in_situ = linha.In_situ
         intemperismo = linha.Grau_de_intemperismo
@@ -365,16 +374,16 @@ class ControladorPrincipal:
 
         # Dicionário com informações que irão para a tabela de cabeçalho
         dados_tabela = {
-            'DATA:': data,
+            'DATA:': f"{data}",
             'COORDENADAS:': f"{easting:.0f}E {northing:.0f}N   {src}",
             'ALTITUDE:': f"{altitude:.0f} m" if not pandas.isna(altitude) else "-",
-            'TOPONÍMIA:': toponimia if not pandas.isna(toponimia) else "-",
-            'EQUIPE:': equipe,
-            'PONTO DE CONTROLE:': ponto_controle,
-            'TIPO DE AFLORAMENTO:': tipo_afloramento if not pandas.isna(tipo_afloramento) else "-",
-            'IN SITU:': in_situ if not pandas.isna(in_situ) else "-",
-            'GRAU DE INTEMPERISMO:': intemperismo if not pandas.isna(intemperismo) else "-",
-            'AMOSTRAS:': num_amostras if num_amostras > 0 else "-",
+            'TOPONÍMIA:': f"{toponimia}" if not pandas.isna(toponimia) else "-",
+            'EQUIPE:': f"{equipe}",
+            'PONTO DE CONTROLE:': f"{ponto_controle}",
+            'TIPO DE AFLORAMENTO:': f"{tipo_afloramento}" if not pandas.isna(tipo_afloramento) else "-",
+            'IN SITU:': f"{in_situ}" if not pandas.isna(in_situ) else "-",
+            'GRAU DE INTEMPERISMO:': f"{intemperismo}" if not pandas.isna(intemperismo) else "-",
+            'AMOSTRAS:': f"{num_amostras}" if num_amostras > 0 else "-",
             'UNIDADE:': f"{unidade} - {unidade_lito}" if not pandas.isna(unidade) else "-"
         }
 
@@ -382,13 +391,13 @@ class ControladorPrincipal:
         table = documento.add_table(rows=0, cols=2)
         table.style = self.estilos["tabela_cabecalho"]
         for key in dados_tabela.keys():
-            row = table.add_row().cells
+            lin = table.add_row().cells
             # Coluna esquerda
-            row[0].text = key
-            row[0].paragraphs[0].style = self.estilos["tabela_esquerda"]
+            lin[0].text = key
+            lin[0].paragraphs[0].style = self.estilos["tabela_esquerda"]
             # Coluna direita
-            row[1].text = str(dados_tabela[key]) if str(dados_tabela[key]) != 'nan' else '-'
-            row[1].paragraphs[0].style = self.estilos["tabela_direita"]
+            lin[1].text = str(dados_tabela[key]) if str(dados_tabela[key]) != 'nan' else '-'
+            lin[1].paragraphs[0].style = self.estilos["tabela_direita"]
 
         # Ajusta a largura das colunas da tabela
         for celula in table.columns[0].cells:
@@ -455,4 +464,9 @@ class ControladorPrincipal:
         return documento
 
     def salvar_caderneta(self, caminho: str):
+        """
+        Salva a caderneta como um arquivo .docx.
+        :param caminho: O caminho do arquivo.
+        :returns: Nada.
+        """
         self.caderneta.save(caminho)

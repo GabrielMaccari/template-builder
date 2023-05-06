@@ -6,7 +6,7 @@
 import sys
 from PyQt6.QtWidgets import QApplication
 
-from View import JanelaPrincipalApp
+from View_Qt import JanelaPrincipalApp
 
 
 if __name__ == '__main__':

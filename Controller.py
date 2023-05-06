@@ -286,7 +286,7 @@ class ControladorPrincipal:
 
         for linha in df.itertuples():
             # Adiciona uma página de título antes do primeiro ponto de cada semestre/disciplina
-            if d <= 2 and linha.Disciplina == disciplinas[d-1]: # TODO bug aqui
+            if d <= 2 and linha.Disciplina == disciplinas[d-1]:
                 documento = self.montar_pagina_semestre(documento, linha.Disciplina)
                 d += 1
 
@@ -469,4 +469,6 @@ class ControladorPrincipal:
         :param caminho: O caminho do arquivo.
         :returns: Nada.
         """
+        if not caminho.endswith(".docx"):
+            caminho += ".docx"
         self.caderneta.save(caminho)

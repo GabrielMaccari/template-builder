@@ -97,10 +97,6 @@ class JanelaPrincipalApp(QMainWindow):
         self.botao_gerar_modelo.clicked.connect(self.botao_gerar_caderneta_clicado)
         self.botao_gerar_modelo.setEnabled(False)
 
-        """# Rótulo dos créditos e informação de contato do autor
-        rotulo_copyright = QLabel("© 2023 Gabriel Maccari")
-        # rotulo_copyright.setStyleSheet("font-size: 7.5pt")"""
-
         # Layout mestre (aninha os widgets e demais layouts)
         layout_principal = QVBoxLayout()
         layout_principal.setSpacing(5)
@@ -111,7 +107,6 @@ class JanelaPrincipalApp(QMainWindow):
         layout_principal.addWidget(separador2)
         layout_principal.addWidget(self.checkbox_folha_rosto)
         layout_principal.addWidget(self.botao_gerar_modelo)
-        # layout_principal.addWidget(rotulo_copyright)
 
         # Painel contendo o layout
         container = QWidget(self)
@@ -264,6 +259,8 @@ class BotaoStatus(QPushButton):
 
         if status not in ["none", "ok"]:
             self.clicked.connect(lambda: self.parent.icone_status_clicado(self.coluna, self.status))
+
+        self.setEnabled(status != "none")
 
 
 def mostrar_dialogo_arquivo(titulo: str, filtro: str, modo="abrir", parent: QMainWindow = None):

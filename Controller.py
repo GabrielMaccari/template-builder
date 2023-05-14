@@ -98,6 +98,8 @@ class ControladorPrincipal:
         """
         # Salva a primeira aba da tabela em um DataFrame
         df = pandas.read_excel(caminho, engine='openpyxl')
+        # Converte os nomes das colunas para string
+        df.columns = df.columns.astype(str)
         # Descarta colunas sem nome
         colunas_remocao = [col for col in df.columns if 'Unnamed' in col]
         df.drop(colunas_remocao, axis='columns', inplace=True)

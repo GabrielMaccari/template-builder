@@ -126,6 +126,14 @@ class AppMainWindow(ctk.CTk):
                 self.file_label.configure(text=split_path[-1])
                 self.number_of_points.configure(text=str(num_points) if num_points > 0 else "-")
                 self.check_column_status()
+
+                if "nan" in self.controller.df.columns:
+                    MessagePopup("Atenção! Existem colunas com nomes inválidos na tabela que podem causar erros ou "
+                                 "anomalias no funcionamento da ferramenta. Verifique se as fórmulas presentes nas "
+                                 "células de cabeçalho das colunas de estruturas (colunas S a AG) não foram "
+                                 "comprometidas. Isso geralmente ocorre ao recortar e colar células na aba de Listas "
+                                 "ao preencher as estruturas.", self)
+
         except Exception as exception:
             MessagePopup(f"ERRO: {exception}", self)
 
@@ -165,7 +173,7 @@ class AppMainWindow(ctk.CTk):
                                                 filetypes=(("Documento do Word", "*.docx"), ("Documento do Word", "*.docx")))
             if path != "":
                 self.controller.salvar_caderneta(path)
-            MessagePopup("Caderneta criada com sucesso!", self)
+                MessagePopup("Caderneta criada com sucesso!", self)
         except Exception as exception:
             MessagePopup(f"ERRO: {exception}", self)
 

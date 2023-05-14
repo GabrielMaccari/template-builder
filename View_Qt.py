@@ -133,8 +133,17 @@ class JanelaPrincipalApp(QMainWindow):
                 self.rotulo_arquivo.setText(partes_caminho[-1])
                 self.num_pontos.setText(str(num_pontos) if num_pontos > 0 else "-")
                 self.checar_colunas()
+
+                if "nan" in self.controlador.df.columns:
+                    mostrar_popup("Atenção! Existem colunas com nomes inválidos na tabela que podem causar erros ou "
+                                  "anomalias no funcionamento da ferramenta. Verifique se as fórmulas presentes nas "
+                                  "células de cabeçalho das colunas de estruturas (colunas S a AG) não foram "
+                                  "comprometidas. Isso geralmente ocorre ao recortar e colar células na aba de Listas "
+                                  "ao preencher as estruturas.")
+
         except Exception as exception:
             mostrar_popup(f"ERRO: {exception}", tipo_msg="erro")
+            print(exception.__class__, exception)
 
     def checar_colunas(self):
         """

@@ -199,7 +199,7 @@ class JanelaPrincipalApp(QMainWindow):
             caminho = mostrar_dialogo_arquivo("Salvar documento da caderneta", "*.docx", modo="salvar")
             if caminho != "":
                 self.controlador.salvar_caderneta(caminho)
-            mostrar_popup("Caderneta criada com sucesso!")
+                mostrar_popup("Caderneta criada com sucesso!")
         except Exception as exception:
             mostrar_popup(f"ERRO: {exception}", tipo_msg="erro")
 

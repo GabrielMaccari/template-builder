@@ -1,0 +1,17 @@
+Name convention: template_builder-framework-os-vx.y.z.exe
+
+--- WINDOWS ---
+
+Qt
+pyinstaller "App_Qt.py" --distpath="template_builder-qt-windows-v3.3.0" --upx-dir="..\upx-3.96-win64" --clean --onefile --noconsole --icon="recursos_app\icones\book.ico"
+
+wx
+pyinstaller "App_wx.py" --distpath="template_builder-wx-windows-v3.3.0" --upx-dir="..\upx-3.96-win64" --clean --onefile --noconsole --icon="recursos_app\icones\book.ico"
+
+--- LINUX ---
+
+Qt
+pyinstaller "App_Qt.py" --distpath="template_builder-qt-linux-v3.3.0" --upx-dir="../upx-4.0.2-amd64_linux" --clean --onefile --noconsole --icon="recursos_app/icones/book.ico" --collect-data=PyQt6 --collect-data=PyQt6_sip
+
+wx
+pyinstaller "App_wx.py" --distpath="template_builder-wx-linux-v3.3.0" --upx-dir="../upx-4.0.2-amd64_linux" --clean --onefile --noconsole --icon="recursos_app/icones/book.ico"

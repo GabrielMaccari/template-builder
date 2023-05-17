@@ -4,15 +4,22 @@
 """
 
 import sys
+from platform import platform
 from PyQt6.QtWidgets import QApplication
 
-from View_Qt import JanelaPrincipalApp
+from ViewController_Qt import JanelaPrincipalApp
+
+OS = platform()
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    app.setStyle("fusion")
 
-    window = JanelaPrincipalApp()
-    window.show()
+    if OS.startswith("Win"):
+        app.setStyle("fusion")
+    else:
+        app.setStyle("Breeze")
+
+    janela = JanelaPrincipalApp()
+    janela.show()
     app.exec()

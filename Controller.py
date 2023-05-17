@@ -5,6 +5,7 @@
 
 import pandas
 import docx
+from datetime import datetime
 
 COLUNAS_TABELA_CADERNETA = {
     "Ponto": {
@@ -283,7 +284,7 @@ class ControladorPrincipal:
         if montar_folha_de_rosto:
             documento = self.montar_folha_rosto(documento)
 
-        d = 1  # Número sequencial do mestre/disciplina. Ex: Map1 = 1
+        d = 1  # Número sequencial do semestre/disciplina. Ex: Map1 = 1
         disciplinas = COLUNAS_TABELA_CADERNETA["Disciplina"]["dominio"]
 
         for linha in df.itertuples():
@@ -398,7 +399,7 @@ class ControladorPrincipal:
             lin[0].text = key
             lin[0].paragraphs[0].style = self.estilos["tabela_esquerda"]
             # Coluna direita
-            lin[1].text = str(dados_tabela[key]) if str(dados_tabela[key]) != 'nan' else '-'
+            lin[1].text = dados_tabela[key]
             lin[1].paragraphs[0].style = self.estilos["tabela_direita"]
 
         # Ajusta a largura das colunas da tabela
@@ -426,6 +427,10 @@ class ControladorPrincipal:
         # Procura medidas estruturais na tabela
         medidas_estruturais = []
         for i, coluna in enumerate(colunas_estrutura):
+            # Se a coluna for uma das colunas essenciais, pula ela
+            # Obs: Se isso acontecer, significa que o usuário inseriu alguma coluna adicional na tabela
+            if coluna in COLUNAS_TABELA_CADERNETA.keys():
+                continue
             # Conteúdo do campo
             medida = linha[i + 19]
             # Se não for uma célula vazia
@@ -471,6 +476,24 @@ class ControladorPrincipal:
         :param caminho: O caminho do arquivo.
         :returns: Nada.
         """
+        self.caderneta.core_properties.author = "Geologia UFSC"
+        self.caderneta.core_properties.category = "Relatório Técnico"
+        self.caderneta.core_properties.comments = "Caderneta de campo compilada elaborada na disciplina de Mapeamento " \
+                                                  "Geológico do curso de graduação em Geologia da UFSC"
+        self.caderneta.core_properties.content_status = "Modelo"
+        self.caderneta.core_properties.created = datetime.now()
+        self.caderneta.core_properties.identifier = None
+        self.caderneta.core_properties.keywords = "Geologia, Mapeamento Geológico"
+        self.caderneta.core_properties.language = "Português (Brasil)"
+        self.caderneta.core_properties.last_modified_by = "Geologia UFSC"
+        #self.caderneta.core_properties.last_printed = None
+        self.caderneta.core_properties.modified = datetime.now()
+        self.caderneta.core_properties.revision = 1
+        self.caderneta.core_properties.subject = "Geologia"
+        self.caderneta.core_properties.title = "Caderneta de Campo Compilada"
+        self.caderneta.core_properties.version = "v1"
+
         if not caminho.endswith(".docx"):
             caminho += ".docx"
+
         self.caderneta.save(caminho)

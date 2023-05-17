@@ -11,18 +11,19 @@ from docx.opc.exceptions import PackageNotFoundError
 
 from Controller import ControladorPrincipal, COLUNAS_TABELA_CADERNETA
 
+TEMPLATE = f"recursos_app/modelos/template_estilos.docx"
+
 
 class JanelaPrincipalApp(QMainWindow):
     def __init__(self):
-        super().__init__()
+        super(JanelaPrincipalApp, self).__init__(None)
 
         # Carrega o template de estilos da caderneta e instancia o controlador
-        template = f"recursos_app/modelos/template_estilos.docx"
         try:
-            self.controlador = ControladorPrincipal(template)
+            self.controlador = ControladorPrincipal(TEMPLATE)
         except PackageNotFoundError:
             mostrar_popup(
-                f"Dependência não encontrada: {template}. Restaure o arquivo a "
+                f"Dependência não encontrada: {TEMPLATE}. Restaure o arquivo a "
                 f"partir do repositório e tente novamente.",
                 tipo_msg="erro", parent=self
             )
@@ -139,11 +140,10 @@ class JanelaPrincipalApp(QMainWindow):
                                   "anomalias no funcionamento da ferramenta. Verifique se as fórmulas presentes nas "
                                   "células de cabeçalho das colunas de estruturas (colunas S a AG) não foram "
                                   "comprometidas. Isso geralmente ocorre ao recortar e colar células na aba de Listas "
-                                  "ao preencher as estruturas.")
+                                  "ao preencher as estruturas.", parent=self)
 
         except Exception as exception:
-            mostrar_popup(f"ERRO: {exception}", tipo_msg="erro")
-            print(exception.__class__, exception)
+            mostrar_popup(f"ERRO: {exception}", tipo_msg="erro", parent=self)
 
     def checar_colunas(self):
         """
@@ -184,7 +184,7 @@ class JanelaPrincipalApp(QMainWindow):
             mostrar_popup(msg, "notificacao", self)
 
         except Exception as exception:
-            mostrar_popup(f"ERRO: {exception}", tipo_msg="erro")
+            mostrar_popup(f"ERRO: {exception}", tipo_msg="erro", parent=self)
 
     def botao_gerar_caderneta_clicado(self):
         """
@@ -201,11 +201,11 @@ class JanelaPrincipalApp(QMainWindow):
                 self.controlador.salvar_caderneta(caminho)
                 mostrar_popup("Caderneta criada com sucesso!")
         except Exception as exception:
-            mostrar_popup(f"ERRO: {exception}", tipo_msg="erro")
+            mostrar_popup(f"ERRO: {exception}", tipo_msg="erro", parent=self)
 
 
 class BotaoStatus(QPushButton):
-    def __init__(self, coluna: str, parent: QMainWindow, status: str = "none"):
+    def __init__(self, coluna: str, parent: JanelaPrincipalApp, status: str = "none"):
         super().__init__()
         self.coluna = coluna
         self.parent = parent

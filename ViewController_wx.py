@@ -44,17 +44,23 @@ class JanelaPrincipalApp(wx.Frame):
 
         # Cria os rótulos das colunas e botões de status em listas e adiciona-os ao layout em grade da seção central
         self.rotulos_colunas, self.botoes_status = [], []
-        lin, col = 0, 0
-        for i, coluna in enumerate(COLUNAS_TABELA_CADERNETA):
+        for coluna in COLUNAS_TABELA_CADERNETA:
             self.rotulos_colunas.append(wx.StaticText(painel, label=coluna))
             self.botoes_status.append(BotaoStatus(coluna, painel, self))
+        i = 0
+        linhas_por_coluna = int(len(self.rotulos_colunas)/2)
+        while i < linhas_por_coluna:
+            try:
+                layout_central.AddMany([(self.rotulos_colunas[i], wx.EXPAND),
+                                        (self.botoes_status[i], wx.CENTRE),
+                                        (self.rotulos_colunas[i+linhas_por_coluna], wx.EXPAND),
+                                        (self.botoes_status[i+linhas_por_coluna], wx.CENTRE)])
+            except IndexError:
+                layout_central.AddMany([(self.rotulos_colunas[i], wx.EXPAND),
+                                        (self.botoes_status[i], wx.CENTRE)])
+            i += 1
 
-            layout_central.Add(self.rotulos_colunas[i], lin, col, wx.EXPAND)
-            layout_central.Add(self.botoes_status[i], lin, col, wx.CENTRE)
-
-            col = col if lin != 8 else col + 3
-            lin = lin + 1 if lin != 8 else 0
-
+        # TODO tirar isso do grid e colocar em um layout separado \/
         self.rotulo_num_pontos = wx.StaticText(painel, label="Número de pontos na tabela:")
         self.num_pontos = wx.StaticText(painel, label="-", style=wx.ALIGN_RIGHT)
 

@@ -1,12 +1,13 @@
 import sys
 import wx
-from platform import platform
-from docx.opc.exceptions import PackageNotFoundError
+import platform
+
+from docx.opc import exceptions as docx_exceptions
 
 from Controller import ControladorPrincipal, COLUNAS_TABELA_CADERNETA
 
 TEMPLATE = f"recursos_app/modelos/template_estilos.docx"
-OS = platform()
+OS = platform.platform()
 
 
 class JanelaPrincipalApp(wx.Frame):
@@ -16,7 +17,7 @@ class JanelaPrincipalApp(wx.Frame):
         # Carrega o template de estilos da caderneta e instancia o controlador
         try:
             self.controlador = ControladorPrincipal(TEMPLATE)
-        except PackageNotFoundError:
+        except docx_exceptions.PackageNotFoundError:
             mostrar_popup(f"Dependência não encontrada: {TEMPLATE}. Restaure o arquivo a partir do repositório e tente "
                           f"novamente.", "Erro", self)
             sys.exit()
@@ -30,44 +31,50 @@ class JanelaPrincipalApp(wx.Frame):
 
         painel = wx.Panel(self)
 
+        layout_arquivo = wx.BoxSizer(wx.HORIZONTAL)
+
         self.rotulo_arquivo = wx.StaticText(painel, label="Selecione uma tabela com os dados dos pontos mapeados.")
         self.botao_abrir_arquivo = wx.Button(painel, label="Selecionar", size=(85, 30))
 
-        layout_superior = wx.BoxSizer(wx.HORIZONTAL)
-        layout_superior.Add(self.rotulo_arquivo, flag=wx.ALIGN_CENTRE_VERTICAL, proportion=1)
-        layout_superior.Add(self.botao_abrir_arquivo, flag=wx.RIGHT)
+        layout_arquivo.Add(self.rotulo_arquivo, flag=wx.ALIGN_CENTRE_VERTICAL, proportion=1)
+        layout_arquivo.Add(self.botao_abrir_arquivo, flag=wx.RIGHT)
 
         separador1 = wx.StaticLine(painel)
 
-        layout_central = wx.FlexGridSizer(rows=10, cols=4, vgap=7, hgap=20)
-        layout_central.SetFlexibleDirection(wx.HORIZONTAL)
+        layout_colunas = wx.FlexGridSizer(cols=4, vgap=7, hgap=20)
+        layout_colunas.AddGrowableCol(0)
+        layout_colunas.AddGrowableCol(2)
+        layout_colunas.SetFlexibleDirection(wx.HORIZONTAL)
 
         # Cria os rótulos das colunas e botões de status em listas e adiciona-os ao layout em grade da seção central
         self.rotulos_colunas, self.botoes_status = [], []
         for coluna in COLUNAS_TABELA_CADERNETA:
-            self.rotulos_colunas.append(wx.StaticText(painel, label=coluna))
+            rotulo = wx.StaticText(painel, label=coluna)
+            rotulo.SetMinSize((180,22))
+            self.rotulos_colunas.append(rotulo)
             self.botoes_status.append(BotaoStatus(coluna, painel, self))
+
+        tamanho_coluna_grid = int(len(self.rotulos_colunas)/2)
+        if len(self.rotulos_colunas) % 2 != 0:
+            tamanho_coluna_grid += 1
         i = 0
-        linhas_por_coluna = int(len(self.rotulos_colunas)/2)
-        while i < linhas_por_coluna:
+        while i < tamanho_coluna_grid:
             try:
-                layout_central.AddMany([(self.rotulos_colunas[i], wx.EXPAND),
-                                        (self.botoes_status[i], wx.CENTRE),
-                                        (self.rotulos_colunas[i+linhas_por_coluna], wx.EXPAND),
-                                        (self.botoes_status[i+linhas_por_coluna], wx.CENTRE)])
+                layout_colunas.Add(window=self.rotulos_colunas[i], flag=wx.EXPAND, proportion=1)
+                layout_colunas.Add(window=self.botoes_status[i], flag=wx.CENTRE)
+                layout_colunas.Add(window=self.rotulos_colunas[i+tamanho_coluna_grid], flag=wx.EXPAND, proportion=1)
+                layout_colunas.Add(window=self.botoes_status[i+tamanho_coluna_grid], flag=wx.CENTRE)
             except IndexError:
-                layout_central.AddMany([(self.rotulos_colunas[i], wx.EXPAND),
-                                        (self.botoes_status[i], wx.CENTRE)])
+                break
             i += 1
+        
+        layout_num_pontos = wx.BoxSizer(wx.HORIZONTAL)
 
-        # TODO tirar isso do grid e colocar em um layout separado \/
-        self.rotulo_num_pontos = wx.StaticText(painel, label="Número de pontos na tabela:")
-        self.num_pontos = wx.StaticText(painel, label="-", style=wx.ALIGN_RIGHT)
+        self.rotulo_num_pontos = wx.StaticText(painel, label="Número de pontos na tabela:   ")
+        self.num_pontos = wx.StaticText(painel, label="-")
 
-        layout_central.Add(self.rotulo_num_pontos, 9, 0)
-        layout_central.Add(self.num_pontos, 9, 0)
-        layout_central.AddGrowableCol(0)
-        layout_central.AddGrowableCol(2)
+        layout_num_pontos.Add(self.rotulo_num_pontos)
+        layout_num_pontos.Add(self.num_pontos)
 
         separador2 = wx.StaticLine(painel)
 
@@ -79,11 +86,13 @@ class JanelaPrincipalApp(wx.Frame):
         self.botao_gerar_caderneta.Disable()
 
         layout_principal = wx.BoxSizer(wx.VERTICAL)
-        layout_principal.Add(layout_superior, flag=wx.EXPAND|wx.LEFT|wx.RIGHT|wx.TOP, border=10)
+        layout_principal.Add(layout_arquivo, flag=wx.EXPAND|wx.LEFT|wx.RIGHT|wx.TOP, border=10)
         layout_principal.AddSpacer(5)
         layout_principal.Add(separador1, flag=wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
         layout_principal.AddSpacer(5)
-        layout_principal.Add(layout_central, flag=wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
+        layout_principal.Add(layout_colunas, flag=wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
+        layout_principal.AddSpacer(10)
+        layout_principal.Add(layout_num_pontos, flag=wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
         layout_principal.AddSpacer(5)
         layout_principal.Add(separador2, flag=wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
         layout_principal.AddSpacer(10)
@@ -98,13 +107,13 @@ class JanelaPrincipalApp(wx.Frame):
         self.botao_gerar_caderneta.Bind(wx.EVT_BUTTON, self.botao_gerar_caderneta_clicado)
 
         self.SetSize(painel.Size)
+        print(layout_colunas.GetColWidths())
 
     def botao_abrir_arquivo_clicado(self, evento: wx.Event):
-        """
-        Chama a função para abrir a tabela no controlador. Caso um arquivo seja aberto com sucesso, atualiza o
+        """Chama a função para abrir a tabela no controlador. Caso um arquivo seja aberto com sucesso, atualiza o
         rotulo_arquivo com o nome do arquivo selecionado e chama o método checar_colunas para atualizar os ícones de
         status.
-        :returns: Nada.
+        :return: Nada.
         """
         try:
             arquivo_aberto, num_pontos = False, "-"
@@ -128,10 +137,9 @@ class JanelaPrincipalApp(wx.Frame):
             mostrar_popup(f"ERRO: {exception}", "Erro", self)
 
     def checar_colunas(self):
-        """
-        Chama a função do controlador para checar se cada coluna está no formato especificado. Atualiza os botões de
+        """Chama a função do controlador para checar se cada coluna está no formato especificado. Atualiza os botões de
         status conforme o resultado. Se todas as colunas estiverem OK, habilita o botão para gerar o template.
-        :returns: Nada.
+        :return: Nada.
         """
         status_colunas = self.controlador.checar_colunas()
         for botao, status in zip(self.botoes_status, status_colunas):
@@ -142,11 +150,10 @@ class JanelaPrincipalApp(wx.Frame):
             self.botao_gerar_caderneta.Disable()
 
     def botao_status_clicado(self, coluna: str, status: str):
-        """
-        Chama a função do controlador para identificar os problemas na coluna e mostra os resultados em uma popup.
+        """Chama a função do controlador para identificar os problemas na coluna e mostra os resultados em uma popup.
         :param coluna: A coluna a ser verificada.
         :param status: O status da coluna ("ok", "faltando", "problemas", "nulos" ou "dominio").
-        :returns: Nada.
+        :return: Nada.
         """
         try:
             localizar_problemas = {
@@ -168,9 +175,8 @@ class JanelaPrincipalApp(wx.Frame):
             mostrar_popup(f"ERRO: {exception}", "Erro", self)
 
     def botao_gerar_caderneta_clicado(self, evento: wx.Event):
-        """
-        Chama as funções do controlador para gerar a caderneta e exportá-la.
-        :returns: Nada.
+        """Chama as funções do controlador para gerar a caderneta e exportá-la.
+        :return: Nada.
         """
         try:
             cursor_espera = wx.BusyCursor()
@@ -244,13 +250,12 @@ class BotaoStatus(wx.Button):
             self.Bind(wx.EVT_BUTTON, lambda x: self.parent.botao_status_clicado(self.coluna, self.status))
 
 
-def mostrar_popup(mensagem: str, titulo: str = "Notificação", parent: wx.Frame = None):
-    """
-    Mostra uma popup com uma mensagem ao usuário.
+def mostrar_popup(mensagem: str, titulo: str = "Notificação", parent: JanelaPrincipalApp = None):
+    """Mostra uma popup com uma mensagem ao usuário.
     :param mensagem: A mensagem a ser exibida na popup.
     :param titulo: "Notificação" ou "Erro" (define o ícone da popup). O valor padrão é "Notificação".
     :param parent: A janela pai (Default = None).
-    :returns: Nada.
+    :return: Nada.
     """
     estilo = wx.OK|wx.CENTRE|wx.ICON_ERROR if titulo == "Erro" else wx.OK|wx.CENTRE|wx.ICON_INFORMATION
     popup = wx.MessageDialog(parent, mensagem, titulo, style=estilo)
@@ -258,14 +263,13 @@ def mostrar_popup(mensagem: str, titulo: str = "Notificação", parent: wx.Frame
     popup.Destroy()
 
 
-def selecionar_arquivo(parent: wx.Frame = None, modo: str = "abrir",
+def selecionar_arquivo(parent: JanelaPrincipalApp = None, modo: str = "abrir",
                        filtro: str = "Pastas de Trabalho do Excel (*.xlsx;*.xlsm)|*.xlsx;*.xlsm") -> str|None:
-    """
-    Abre um diálogo de seleção/salvamento de arquivo.
+    """Abre um diálogo de seleção/salvamento de arquivo.
     :param parent: A janela pai (Default = None).
     :param modo: "open" ou "save". Define se o diálogo será de abertura ou salvamento de arquivo.
     :param filtro: Filtros de tipo de arquivo (Ex: "Planilha do Excel (\*.xlsx)|CSV (\*.csv)")
-    :returns: Nada.
+    :return: Nada.
     """
     titulo = "Selecionar arquivo" if modo == "abrir" else "Salvar arquivo"
     estilo = wx.FD_OPEN|wx.FD_FILE_MUST_EXIST if modo == "abrir" else wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT

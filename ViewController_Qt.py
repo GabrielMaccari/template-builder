@@ -4,24 +4,25 @@
 """
 
 import sys
-from PyQt6.QtWidgets import *
-from PyQt6.QtGui import QIcon
-from PyQt6.QtCore import Qt
-from docx.opc.exceptions import PackageNotFoundError
+
+import PyQt6.QtWidgets as QtWidgets
+import PyQt6.QtGui as QtGui
+import PyQt6.QtCore as QtCore
+from docx.opc import exceptions as docx_exceptions
 
 from Controller import ControladorPrincipal, COLUNAS_TABELA_CADERNETA
 
 TEMPLATE = f"recursos_app/modelos/template_estilos.docx"
 
 
-class JanelaPrincipalApp(QMainWindow):
+class JanelaPrincipalApp(QtWidgets.QMainWindow):
     def __init__(self):
         super(JanelaPrincipalApp, self).__init__(None)
 
         # Carrega o template de estilos da caderneta e instancia o controlador
         try:
             self.controlador = ControladorPrincipal(TEMPLATE)
-        except PackageNotFoundError:
+        except docx_exceptions.PackageNotFoundError:
             mostrar_popup(
                 f"Dependência não encontrada: {TEMPLATE}. Restaure o arquivo a "
                 f"partir do repositório e tente novamente.",
@@ -31,95 +32,107 @@ class JanelaPrincipalApp(QMainWindow):
 
         # Constrói a interface -----
         self.setWindowTitle('Template Builder')
-        self.setWindowIcon(QIcon('recursos_app/icones/book.png'))
-
-        # Rótulo do nome do arquivo
-        self.rotulo_arquivo = QLabel("Selecione um arquivo .xlsx com os dados dos pontos mapeados.")
-
-        # Botão para selecionar a tabela
-        botao_abrir_arquivo = QPushButton("Selecionar")
-        botao_abrir_arquivo.setMaximumWidth(75)
-        botao_abrir_arquivo.clicked.connect(self.botao_abrir_arquivo_clicado)
+        self.setWindowIcon(QtGui.QIcon('recursos_app/icones/book.png'))
 
         # Layout que organiza a porção superior da interface (acima da linha)
-        layout_superior = QHBoxLayout()
+        layout_arquivo = QtWidgets.QHBoxLayout()
 
-        layout_superior.addWidget(self.rotulo_arquivo)
-        layout_superior.addWidget(botao_abrir_arquivo)
+        # Rótulo do nome do arquivo
+        self.rotulo_arquivo = QtWidgets.QLabel("Selecione uma tabela com os dados dos pontos mapeados.")
+
+        # Botão para selecionar a tabela
+        self.botao_abrir_arquivo = QtWidgets.QPushButton("Selecionar")
+        self.botao_abrir_arquivo.setMaximumSize(75,30)
+        self.botao_abrir_arquivo.clicked.connect(self.botao_abrir_arquivo_clicado)
+
+        layout_arquivo.addWidget(self.rotulo_arquivo)
+        layout_arquivo.addWidget(self.botao_abrir_arquivo)
 
         # Linha que separa a seleção de arquivo do restante da interface
-        separador = QFrame(None)
+        separador = QtWidgets.QFrame(None)
         separador.setLineWidth(1)
-        separador.setFrameShape(QFrame.Shape.HLine)
-        separador.setFrameShadow(QFrame.Shadow.Sunken)
+        separador.setFrameShape(QtWidgets.QFrame.Shape.HLine)
+        separador.setFrameShadow(QtWidgets.QFrame.Shadow.Sunken)
 
         # Layout em grade da seção de colunas da tabela
-        layout_central = QGridLayout(None)
-        layout_central.setHorizontalSpacing(0)
-        layout_central.setVerticalSpacing(5)
-        layout_central.setColumnMinimumWidth(2, 50)
+        layout_colunas = QtWidgets.QGridLayout(None)
 
-        # Cria os rótulos das colunas e botões de status em listas e adiciona-os
-        # ao layout em grade da seção central
+        # Cria os rótulos das colunas e botões de status em listas e adiciona-os ao layout em grade da seção central
         self.rotulos_colunas, self.botoes_status = [], []
-        lin, col = 0, 0
-        for i, coluna in enumerate(COLUNAS_TABELA_CADERNETA):
-            self.rotulos_colunas.append(QLabel(coluna))
+        for coluna in COLUNAS_TABELA_CADERNETA:
+            self.rotulos_colunas.append(QtWidgets.QLabel(coluna))
             self.botoes_status.append(BotaoStatus(coluna, self))
 
-            layout_central.addWidget(self.rotulos_colunas[i], lin, col)
-            layout_central.addWidget(self.botoes_status[i], lin, col + 1)
+        tamanho_coluna_grid = int(len(self.rotulos_colunas) / 2)
+        if len(self.rotulos_colunas) % 2 != 0:
+            tamanho_coluna_grid += 1
+        i = 0
+        while i < tamanho_coluna_grid:
+            try:
+                layout_colunas.addWidget(self.rotulos_colunas[i], i, 0)
+                layout_colunas.addWidget(self.botoes_status[i], i, 1)
+                layout_colunas.addWidget(self.rotulos_colunas[i+tamanho_coluna_grid], i, 3)
+                layout_colunas.addWidget(self.botoes_status[i+tamanho_coluna_grid], i, 4)
+            except IndexError:
+                break
+            i += 1
 
-            col = col if lin != 8 else col + 3
-            lin = lin + 1 if lin != 8 else 0
+        layout_colunas.setHorizontalSpacing(0)
+        layout_colunas.setVerticalSpacing(5)
+        layout_colunas.setColumnMinimumWidth(2, 20)
+
+        # Layout para organizar os rótulos de contagem de pontos
+        layout_num_pontos = QtWidgets.QHBoxLayout()
 
         # Rótulos para exibir o número de linhas (pontos meapeados) na tabela
-        rotulo_num_pontos = QLabel("Número de pontos na tabela: ")
-        self.num_pontos = QLabel("-")
-        self.num_pontos.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.rotulo_num_pontos = QtWidgets.QLabel("Número de pontos na tabela:   ")
+        self.num_pontos = QtWidgets.QLabel("-")
+        self.num_pontos.setMaximumWidth(30)
+        self.num_pontos.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeft)
 
-        layout_central.addWidget(rotulo_num_pontos, 9, 0)
-        layout_central.addWidget(self.num_pontos, 9, 1)
+        layout_num_pontos.addWidget(self.rotulo_num_pontos)
+        layout_num_pontos.addWidget(self.num_pontos)
+        layout_num_pontos.addStretch()
 
         # Linha que separa a porção central da porção inferior da interface
-        separador2 = QFrame(None)
+        separador2 = QtWidgets.QFrame(None)
         separador2.setLineWidth(1)
-        separador2.setFrameShape(QFrame.Shape.HLine)
-        separador2.setFrameShadow(QFrame.Shadow.Sunken)
+        separador2.setFrameShape(QtWidgets.QFrame.Shape.HLine)
+        separador2.setFrameShadow(QtWidgets.QFrame.Shadow.Sunken)
 
         # Checkbox para marcar se gera ou não a folha de rosto
-        self.checkbox_folha_rosto = QCheckBox("Incluir folha de rosto no início da caderneta")
+        self.checkbox_folha_rosto = QtWidgets.QCheckBox("Incluir folha de rosto no início da caderneta")
         self.checkbox_folha_rosto.setToolTip("Gera uma página com informações do projeto no início da caderneta")
         self.checkbox_folha_rosto.setChecked(True)
 
         # Botão para gerar e exportar o template da caderneta
-        self.botao_gerar_modelo = QPushButton("Gerar caderneta")
+        self.botao_gerar_modelo = QtWidgets.QPushButton("Gerar caderneta")
         self.botao_gerar_modelo.setMinimumHeight(35)
         self.botao_gerar_modelo.clicked.connect(self.botao_gerar_caderneta_clicado)
         self.botao_gerar_modelo.setEnabled(False)
 
         # Layout mestre (aninha os widgets e demais layouts)
-        layout_principal = QVBoxLayout()
+        layout_principal = QtWidgets.QVBoxLayout()
         layout_principal.setSpacing(5)
 
-        layout_principal.addLayout(layout_superior)
+        layout_principal.addLayout(layout_arquivo)
         layout_principal.addWidget(separador)
-        layout_principal.addLayout(layout_central)
+        layout_principal.addLayout(layout_colunas)
+        layout_principal.addLayout(layout_num_pontos)
         layout_principal.addWidget(separador2)
         layout_principal.addWidget(self.checkbox_folha_rosto)
         layout_principal.addWidget(self.botao_gerar_modelo)
 
         # Painel contendo o layout
-        container = QWidget(self)
+        container = QtWidgets.QWidget(self)
         container.setLayout(layout_principal)
         self.setCentralWidget(container)
 
     def botao_abrir_arquivo_clicado(self):
-        """
-        Chama a função para abrir a tabela no controlador. Caso um arquivo seja aberto com sucesso, atualiza o
+        """Chama a função para abrir a tabela no controlador. Caso um arquivo seja aberto com sucesso, atualiza o
         rotulo_arquivo com o nome do arquivo selecionado e chama o método checar_colunas para atualizar os ícones de
         status.
-        :returns: Nada.
+        :return: Nada.
         """
         try:
             arquivo_aberto, num_pontos = False, "-"
@@ -146,10 +159,9 @@ class JanelaPrincipalApp(QMainWindow):
             mostrar_popup(f"ERRO: {exception}", tipo_msg="erro", parent=self)
 
     def checar_colunas(self):
-        """
-        Chama a função do controlador para checar se cada coluna está no formato especificado. Atualiza os botões de
+        """Chama a função do controlador para checar se cada coluna está no formato especificado. Atualiza os botões de
         status conforme o resultado. Se todas as colunas estiverem OK, habilita o botão para gerar o template.
-        :returns: Nada.
+        :return: Nada.
         """
         status_colunas = self.controlador.checar_colunas()
         for widget, status in zip(self.botoes_status, status_colunas):
@@ -160,11 +172,10 @@ class JanelaPrincipalApp(QMainWindow):
             self.botao_gerar_modelo.setEnabled(False)
 
     def icone_status_clicado(self, coluna: str, status: str):
-        """
-        Chama a função do controlador para identificar os problemas na coluna e mostra os resultados em uma popup.
+        """Chama a função do controlador para identificar os problemas na coluna e mostra os resultados em uma popup.
         :param coluna: A coluna a ser verificada.
         :param status: O status da coluna ("ok", "faltando", "problemas", "nulos" ou "dominio").
-        :returns: Nada.
+        :return: Nada.
         """
 
         try:
@@ -187,9 +198,8 @@ class JanelaPrincipalApp(QMainWindow):
             mostrar_popup(f"ERRO: {exception}", tipo_msg="erro", parent=self)
 
     def botao_gerar_caderneta_clicado(self):
-        """
-        Chama as funções do controlador para gerar a caderneta e exportá-la.
-        :returns: Nada.
+        """Chama as funções do controlador para gerar a caderneta e exportá-la.
+        :return: Nada.
         """
         try:
             mostrar_cursor_espera()
@@ -204,7 +214,7 @@ class JanelaPrincipalApp(QMainWindow):
             mostrar_popup(f"ERRO: {exception}", tipo_msg="erro", parent=self)
 
 
-class BotaoStatus(QPushButton):
+class BotaoStatus(QtWidgets.QPushButton):
     def __init__(self, coluna: str, parent: JanelaPrincipalApp, status: str = "none"):
         super().__init__()
         self.coluna = coluna
@@ -222,39 +232,38 @@ class BotaoStatus(QPushButton):
         self.definir_status(status)
 
     def definir_status(self, status: str):
-        """
-        Define o ícone e a tooltip do botão. Conecta à função icone_status_clicado caso o status não seja "none" ou "ok".
+        """Define o ícone e a tooltip do botão. Conecta à função icone_status_clicado caso o status não seja "none" ou "ok".
         :param status: O status da coluna ("none", "ok", "faltando", "problemas", "nulos" ou "dominio")
-        :returns: Nada.
+        :return: Nada.
         """
         dic_botoes = {
             "none": {
-                "icone": QIcon("recursos_app/icones/circle.png"),
+                "icone": QtGui.QIcon("recursos_app/icones/circle.png"),
                 "tooltip": "Carregue um arquivo"
             },
             "ok": {
-                "icone": QIcon("recursos_app/icones/ok.png"),
+                "icone": QtGui.QIcon("recursos_app/icones/ok.png"),
                 "tooltip": "OK"
             },
             "missing_column": {
-                "icone": QIcon("recursos_app/icones/not_ok.png"),
+                "icone": QtGui.QIcon("recursos_app/icones/not_ok.png"),
                 "tooltip": "Coluna não encontrada na tabela"
             },
             "wrong_dtype": {
-                "icone": QIcon("recursos_app/icones/not_ok.png"),
+                "icone": QtGui.QIcon("recursos_app/icones/not_ok.png"),
                 "tooltip": "A coluna contém dados com\nformato errado"
             },
             "nan_not_allowed": {
-                "icone": QIcon("recursos_app/icones/not_ok.png"),
+                "icone": QtGui.QIcon("recursos_app/icones/not_ok.png"),
                 "tooltip": "A coluna não permite nulos,\nmas existem células vazias"
             },
             "outside_domain": {
-                "icone": QIcon("recursos_app/icones/not_ok.png"),
+                "icone": QtGui.QIcon("recursos_app/icones/not_ok.png"),
                 "tooltip": "Algumas células contêm valores\nfora da lista de valores permitidos"
             }
         }
 
-        icone = QIcon(dic_botoes[status]["icone"])
+        icone = QtGui.QIcon(dic_botoes[status]["icone"])
         tooltip = dic_botoes[status]["tooltip"]
 
         self.status = status
@@ -272,16 +281,15 @@ class BotaoStatus(QPushButton):
         self.setEnabled(status != "none")
 
 
-def mostrar_dialogo_arquivo(titulo: str, filtro: str, modo="abrir", parent: QMainWindow = None):
-    """
-    Abre um diálogo de seleção/salvamento de arquivo.
+def mostrar_dialogo_arquivo(titulo: str, filtro: str, modo="abrir", parent: JanelaPrincipalApp = None):
+    """Abre um diálogo de seleção/salvamento de arquivo.
     :param titulo: O título da janela.
     :param filtro: Filtros de tipo de arquivo (Ex: "Planilha do Excel (*.xlsx);;Planilha com macro do Excel (*.xlsm)")
     :param modo: "abrir" ou "salvar". Define se o diálogo será de abertura ou salvamento de arquivo.
     :param parent: A janela pai (Default = None).
-    :returns: Nada.
+    :return: Nada.
     """
-    dialog = QFileDialog(parent)
+    dialog = QtWidgets.QFileDialog(parent)
     if modo == "abrir":
         caminho, tipo = dialog.getOpenFileName(
             caption=titulo, filter=filtro, parent=parent
@@ -294,33 +302,31 @@ def mostrar_dialogo_arquivo(titulo: str, filtro: str, modo="abrir", parent: QMai
 
 
 def mostrar_cursor_espera(ativar: bool = True):
-    """
-    Troca o cursor do mouse por um cursor de espera.
+    """Troca o cursor do mouse por um cursor de espera.
     :param ativar: Default True. False para restaurar o cursor normal.
-    :returns: Nada.
+    :return: Nada.
     """
     if ativar:
-        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+        QtWidgets.QApplication.setOverrideCursor(QtCore.Qt.CursorShape.WaitCursor)
     else:
-        QApplication.restoreOverrideCursor()
+        QtWidgets.QApplication.restoreOverrideCursor()
 
 
-def mostrar_popup(mensagem: str, tipo_msg: str = "notificacao", parent: QMainWindow = None):
-    """
-    Mostra uma popup com uma mensagem ao usuário.
+def mostrar_popup(mensagem: str, tipo_msg: str = "notificacao", parent: JanelaPrincipalApp = None):
+    """Mostra uma popup com uma mensagem ao usuário.
     :param mensagem: A mensagem a ser exibida na popup.
     :param tipo_msg: "notificacao" ou "erro" (define o ícone da popup). O valor padrão é "notificacao".
     :param parent: A janela pai (Default = None).
-    :returns: Nada.
+    :return: Nada.
     """
     tipos_popup = {
         "notificacao": {"titulo": "Notificação", "icone": "recursos_app/icones/info.png"},
         "erro":        {"titulo": "Erro",        "icone": "recursos_app/icones/error.png"}
     }
     title = tipos_popup[tipo_msg]["titulo"]
-    icon = QIcon(tipos_popup[tipo_msg]["icone"])
+    icon = QtGui.QIcon(tipos_popup[tipo_msg]["icone"])
 
-    popup = QMessageBox(parent)
+    popup = QtWidgets.QMessageBox(parent)
     popup.setText(mensagem)
     popup.setWindowTitle(title)
     popup.setWindowIcon(icon)

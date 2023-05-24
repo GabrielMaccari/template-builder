@@ -5,8 +5,11 @@
 
 import pandas
 import docx
+
 from datetime import datetime
 
+# Essas são as colunas que se espera que a tabela da caderneta terá 
+# (com exceção de colunas de estruturas, cujo nome varia com a estrutura)
 COLUNAS_TABELA_CADERNETA = {
     "Ponto": {
         "dtype": "object", "nulo_ok": False, "dominio": None
@@ -73,6 +76,7 @@ class ControladorPrincipal:
         self.df = df
         self.caderneta = None
 
+        # Estilos de parágrafos e tabelas contidos no template de estilos
         self.estilos = {
             "normal": self.template.styles['Normal'],
             "titulo": self.template.styles['Title'],
@@ -92,10 +96,9 @@ class ControladorPrincipal:
         self.template = docx.Document(self.caminho_template)
 
     def abrir_tabela(self, caminho: str) -> object:
-        """
-        Abre uma tabela do excel e armazena o DataFrame no atributo "df" do controlador.
+        """Abre uma tabela do excel e armazena o DataFrame no atributo "df" do controlador.
         :param caminho: O caminho até um arquivo .xlsx ou .xlsm.
-        :returns: Boolean dizendo se o DataFrame foi criado com sucesso e Integer com o número de linhas do DataFrame
+        :return: Boolean dizendo se o DataFrame foi criado com sucesso e Integer com o número de linhas do DataFrame
         """
         # Salva a primeira aba da tabela em um DataFrame
         df = pandas.read_excel(caminho, engine='openpyxl')
@@ -110,7 +113,7 @@ class ControladorPrincipal:
         linhas = len(df.index)
         if linhas <= 0:
             raise Exception('A tabela selecionada está vazia ou contém apenas cabeçalhos.')
-        # Checa se o dataframe foi criado ou não e armazena no model
+        # Checa se o dataframe foi criado ou não e armazena no atributo
         if isinstance(df, pandas.DataFrame):
             self.df = df
             self.caderneta = None
@@ -119,10 +122,9 @@ class ControladorPrincipal:
             return False, linhas
 
     def checar_colunas(self) -> list[str]:
-        """
-        Checa se cada coluna esperada para a tabela existe, está no formato correto, contém apenas valores permitidos.
+        """Checa se cada coluna esperada para a tabela existe, está no formato correto, contém apenas valores permitidos.
         O DataFrame é obtido do atributo "df" do controlador.
-        :returns: Lista de strings especificando o status de cada coluna. O status pode ser "ok", "faltando", "problemas", "nulos" ou "dominio"
+        :return: Lista de strings especificando o status de cada coluna. O status pode ser "ok", "faltando", "problemas", "nulos" ou "dominio"
         """
         df = self.df
         colunas_df = df.columns.to_list()
@@ -150,8 +152,7 @@ class ControladorPrincipal:
                 status_colunas.append("wrong_dtype")
                 continue
 
-            # Verifica se a coluna possui valores controlados e se existe algum
-            # valor fora do domínio
+            # Verifica se a coluna possui valores controlados e se existe algum valor fora do domínio
             if dominio is not None:
                 valores_coluna = df[c]
                 if nulo_ok:
@@ -165,10 +166,9 @@ class ControladorPrincipal:
         return status_colunas
 
     def localizar_problemas_formato(self, coluna: str) -> list[int]:
-        """
-        Localiza as linhas da tabela com problemas que impedem a conversão para o tipo de dado esperado.
+        """Localiza as linhas da tabela com problemas que impedem a conversão para o tipo de dado esperado.
         :param coluna: O nome da coluna a ser verificada.
-        :returns: Lista contendo os indexes das linhas com problema.
+        :return: Lista contendo os indexes das linhas com problema.
         """
         valores = self.df[coluna].dropna()
         tipo_alvo = COLUNAS_TABELA_CADERNETA[coluna]["dtype"]
@@ -180,7 +180,7 @@ class ControladorPrincipal:
         }
 
         if tipo_alvo not in funcoes_conversao:
-            raise Exception(f"Checagem não implementada para o tipo de dado ({tipo_alvo})")
+            raise Exception(f"Checagem não implementada para o tipo de dado ({tipo_alvo}).")
 
         # Valores que não podem ser convertidos tornam-se NaN devido ao "coerce"
         convertido = funcoes_conversao[tipo_alvo]
@@ -188,20 +188,18 @@ class ControladorPrincipal:
         return indices_problemas
 
     def localizar_celulas_vazias(self, coluna: str) -> list[int]:
-        """
-        Localiza as linhas da coluna especificada que contêm valores nulos.
+        """Localiza as linhas da coluna especificada que contêm valores nulos.
         :param coluna: O nome da coluna a ser verificada.
-        :returns: Lista contendo os indexes das linhas com problema.
+        :return: Lista contendo os indexes das linhas com problema.
         """
         valores_coluna = self.df.loc[:, coluna]
         indices_problemas = self.df[valores_coluna.isnull()].index.tolist()
         return indices_problemas
 
     def localizar_problemas_dominio(self, coluna: str) -> list[int]:
-        """
-        Localiza células em uma coluna com valores fora de domínio.
+        """Localiza células em uma coluna com valores fora de domínio.
         :param coluna: O nome da coluna a ser verificada.
-        :returns: Lista contendo os indexes das linhas com problema.
+        :return: Lista contendo os indexes das linhas com problema.
         """
         valores_coluna = self.df.loc[:, coluna]
         dominio = COLUNAS_TABELA_CADERNETA[coluna]["dominio"]
@@ -209,12 +207,11 @@ class ControladorPrincipal:
         return indices_problemas
 
     def montar_msg_problemas(self, tipo_problema: str, coluna: str, indices: list[int]) -> str:
-        """
-        Monta a mensagem especificando quais linhas da tabela estão com problemas.
+        """Monta a mensagem especificando quais linhas da tabela estão com problemas.
         :param tipo_problema: "missing_column", "wrong_dtype", "nan_not_allowed" ou "outside_domain"
         :param coluna: O nome da coluna.
         :param indices: Os índices das linhas com problemas no DataFrame.
-        :returns: String descrevendo o problema e as linhas que devem ser corrigidas.
+        :return: String descrevendo o problema e as linhas que devem ser corrigidas.
         """
         dtype_coluna = str(COLUNAS_TABELA_CADERNETA[coluna]["dtype"])
 
@@ -248,10 +245,9 @@ class ControladorPrincipal:
         return "\n".join(mensagem)
 
     def gerar_caderneta(self, montar_folha_de_rosto: bool = True):
-        """
-        Gera a caderneta pré-preenchida.
-        :param folha_de_rosto: Opção para gerar ou não uma folha de rosto.
-        :returns: Nada.
+        """Gera a caderneta pré-preenchida.
+        :param montar_folha_de_rosto: Opção para gerar ou não uma folha de rosto.
+        :return: Nada.
         """
         # Limpa todos os objetos da classe docx.Document para evitar bugs comuns
         self.recarregar_template()
@@ -302,10 +298,9 @@ class ControladorPrincipal:
         self.caderneta = documento
 
     def montar_folha_rosto(self, documento: docx.Document) -> docx.Document:
-        """
-        Adiciona uma folha de rosto à caderneta.
+        """Adiciona uma folha de rosto à caderneta.
         :param documento: O documento.
-        :returns: O documento com a folha de rosto.
+        :return: O documento com a folha de rosto.
         """
         for i in range(0, 15):
             if i == 10:
@@ -327,11 +322,10 @@ class ControladorPrincipal:
         return documento
 
     def montar_pagina_semestre(self, documento: docx.Document, disciplina: str) -> docx.Document:
-        """
-        Adiciona uma página de título à caderneta para dividir os semestres do mapeamento geológico.
+        """Adiciona uma página de título à caderneta para dividir os semestres do mapeamento geológico.
         :param documento: O documento.
         :param disciplina: "Mapeamento Geológico I" ou "Mapeamento Geológico II".
-        :returns: O documento com a página de título do semestre.
+        :return: O documento com a página de título do semestre.
         """
         try:  # Quando não há folha de rosto, o documento está inicialmente vazio, e isso causa um IndexError
             documento.paragraphs[-1].add_run().add_break(docx.enum.text.WD_BREAK.PAGE)
@@ -345,12 +339,11 @@ class ControladorPrincipal:
 
     def montar_pagina_ponto(self, documento: docx.Document, linha: pandas.core.frame.pandas,
                             colunas_estrutura: list[str]) -> docx.Document:
-        """
-        Acrescenta uma página de informações de um ponto à caderneta.
+        """Acrescenta uma página de informações de um ponto à caderneta.
         :param documento: O documento
         :param linha: Duplas de rótulos e valores da linha do DataFrame (gerado via DataFrame.itertuples().
         :param colunas_estrutura: Os nomes das colunas de medidas estruturais presentes na tabela.
-        :returns: O documento com a página do ponto.
+        :return: O documento com a página do ponto.
         """
 
         # Valores das colunas para a linha
@@ -471,10 +464,9 @@ class ControladorPrincipal:
         return documento
 
     def salvar_caderneta(self, caminho: str):
-        """
-        Salva a caderneta como um arquivo .docx.
+        """Salva a caderneta como um arquivo .docx.
         :param caminho: O caminho do arquivo.
-        :returns: Nada.
+        :return: Nada.
         """
         self.caderneta.core_properties.author = "Geologia UFSC"
         self.caderneta.core_properties.category = "Relatório Técnico"

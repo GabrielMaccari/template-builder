@@ -5,18 +5,23 @@
 import wx
 import ctypes
 
-from ViewController_wx import JanelaPrincipalApp
+import ViewController_wx
 
-if __name__ == '__main__':
+
+def main():
 	try:
 		ctypes.windll.shcore.SetProcessDpiAwareness(True)
-	except:
-		pass
+	except Exception as e:
+		print(f"{e.__class__}: {e}")
 
 	app = wx.App()
 
-	janela = JanelaPrincipalApp()
+	janela = ViewController_wx.JanelaPrincipalApp()
 	janela.Centre()
 	janela.Show()
 
 	app.MainLoop()
+
+
+if __name__ == '__main__':
+	main()

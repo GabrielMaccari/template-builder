@@ -6,6 +6,7 @@
         em Geologia da UFSC.
       </h4>
       </br>
+     Acesse a páginas de <a href="https://github.com/FrostPredator/template-builder/releases">releases</a> para baixar.
   <p>
 </div> 
 

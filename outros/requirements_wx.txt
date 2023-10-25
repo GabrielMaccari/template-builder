@@ -1,4 +1,0 @@
-pandas==2.0.1
-openpyxl==3.1.2
-python_docx==0.8.11
-wxPython==4.2.0

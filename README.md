@@ -12,10 +12,6 @@
 
 ![qt_windows](https://github.com/FrostPredator/template-builder/assets/114439033/b93eee2c-6dac-4a13-a420-60df72015317)
 
-## Qual versão baixar?
-- **Windows:** Ambas as versões (Qt e wx) funcionam perfeitamente. Baixe a versão Qt se você usa o tema escuro do Windows 11.
-- **Linux:** Baixe a versão wx, pois ela se adaptará ao tema do seu Desktop Environment (testado no GNOME e Cinnamon). A versão Qt pode não funcionar em distros que não utilizem Wayland.
-
 ## Instruções de uso
 ### Como preencher a tabela de pontos
 #### Passo 1: Configurando as listas de opções
@@ -98,3 +94,4 @@ De forma similar ao erro anterior, basta restaurar os ícones da interface para 
 
 ##### “ERRO: [Errno 13] Permission denied: [...].docx” (ao salvar a caderneta)
 Caso você já tenha gerado a caderneta anteriormente com a ferramenta e esteja gerando um novo arquivo no mesmo caminho, verifique se o arquivo anterior não está aberto em outro programa (Ex: Word). Se não for o caso, tente escolher outra pasta para salvar o arquivo (Ex: Área de trabalho, Downloads, Documentos).
+

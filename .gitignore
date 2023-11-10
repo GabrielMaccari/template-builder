@@ -176,3 +176,6 @@ cython_debug/
 .idea/.gitignore
 
 dados_teste.xlsx
+log.txt
+log.py
+log.log

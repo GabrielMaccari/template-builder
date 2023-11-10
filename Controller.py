@@ -6,6 +6,16 @@
 from PyQt6.QtWidgets import *
 from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import Qt
+from icecream import ic
+
+
+def log_to_file(text, mode='a'):
+    with open("log.log", mode, encoding="utf-8") as f:
+        f.write(f"{text}\n")
+
+
+ic.configureOutput(prefix='LOG| ', includeContext=True, outputFunction=log_to_file)
+log_to_file("------------------ LOG DA ÚLTIMA EXECUÇÃO ------------------", 'w')
 
 
 class Controlador:
@@ -15,13 +25,16 @@ class Controlador:
         # Atributos do controlador
         self.modelo = modelo
         self.interface = interface
+        self.caminho_caderneta = None
 
         # Conecta os botões de abrir arquivo e gerar a caderneta às funções
         self.interface.botao_abrir_arquivo.clicked.connect(self.botao_abrir_arquivo_clicado)
-        self.interface.botao_gerar_modelo.clicked.connect(self.botao_gerar_caderneta_clicado)
+        self.interface.botao_gerar_nova_caderneta.clicked.connect(self.botao_gerar_nova_caderneta_clicado)
 
         # Define a função a ser conectada aos botões de status das colunas
         self.interface.funcao_botoes_status = self.icone_status_clicado
+
+        self.interface.checkbox_continuar_caderneta.clicked.connect(self.checkbox_continuar_caderneta_clicada)
 
         self.interface.show()
 
@@ -32,6 +45,8 @@ class Controlador:
         status.
         :returns: Nada.
         """
+        ic()
+
         try:
             # arquivo_aberto, num_pontos = False, "-"   # Eu removi isso e A PRINCÍPIO não quebrou nada :)
             caminho = mostrar_dialogo_arquivo(
@@ -49,17 +64,22 @@ class Controlador:
             partes_caminho = caminho.split("/")
             self.interface.rotulo_arquivo.setText(partes_caminho[-1])
             self.interface.num_pontos.setText(str(num_pontos) if num_pontos > 0 else "-")
+            self.interface.combobox_ponto_inicio.clear()
+            self.interface.combobox_ponto_inicio.addItems(self.modelo.df["Ponto"])
             self.checar_colunas()
 
             if "nan" in self.modelo.df.columns:
-                mostrar_popup("Atenção! Existem colunas com nomes inválidos na tabela que podem causar erros ou "
-                              "anomalias no funcionamento da ferramenta. Verifique se as fórmulas presentes nas "
-                              "células de cabeçalho das colunas de estruturas (colunas S a AG) não foram "
-                              "comprometidas. Isso geralmente ocorre ao recortar e colar células na aba de Listas "
-                              "ao preencher as estruturas.", parent=self.interface)
+                mostrar_popup(
+                    "Atenção! Existem colunas com nomes inválidos na tabela que podem causar erros ou "
+                    "anomalias no funcionamento da ferramenta. Verifique se as fórmulas presentes nas células de "
+                    "cabeçalho das colunas de estruturas (colunas S a AG) não foram comprometidas. Isso geralmente "
+                    "ocorre ao recortar e colar células na aba de Listas ao preencher as estruturas.",
+                    parent=self.interface
+                )
 
         except Exception as exception:
             mostrar_popup(f"{exception}", tipo_msg="erro", parent=self.interface)
+            ic(exception)
 
     def checar_colunas(self):
         """
@@ -67,13 +87,15 @@ class Controlador:
         status conforme o resultado. Se todas as colunas estiverem OK, habilita o botão para gerar o template.
         :returns: Nada.
         """
+        ic()
+
         status_colunas = self.modelo.checar_colunas()
         for widget, status in zip(self.interface.botoes_status, status_colunas):
             widget.definir_status(status)
         if all(stts == "ok" for stts in status_colunas):
-            self.interface.botao_gerar_modelo.setEnabled(True)
+            self.interface.botao_gerar_nova_caderneta.setEnabled(True)
         else:
-            self.interface.botao_gerar_modelo.setEnabled(False)
+            self.interface.botao_gerar_nova_caderneta.setEnabled(False)
 
     def icone_status_clicado(self, coluna: str, status: str):
         """
@@ -82,13 +104,15 @@ class Controlador:
         :param status: O status da coluna ("ok", "faltando", "problemas", "nulos" ou "dominio").
         :returns: Nada.
         """
+        ic(coluna, status)
 
         try:
             localizar_problemas = {
                 "missing_column": lambda coluna_faltando: [],
                 "wrong_dtype": self.modelo.localizar_problemas_formato,
                 "nan_not_allowed": self.modelo.localizar_celulas_vazias,
-                "outside_domain": self.modelo.localizar_problemas_dominio
+                "outside_domain": self.modelo.localizar_problemas_dominio,
+                "not_unique": self.modelo.localizar_valores_repetidos
             }
 
             if status not in localizar_problemas.keys():
@@ -101,23 +125,51 @@ class Controlador:
 
         except Exception as exception:
             mostrar_popup(f"{exception}", tipo_msg="erro", parent=self.interface)
+            ic(exception)
 
-    def botao_gerar_caderneta_clicado(self):
+    def checkbox_continuar_caderneta_clicada(self):
+        """
+        Atualiza a interface e permite ao usuário selecionar um arquivo de template para continuar uma caderneta.
+        :returns: Nada.
+        """
+        ic()
+
+        continuar_caderneta = self.interface.checkbox_continuar_caderneta.isChecked()
+        if continuar_caderneta:
+            self.interface.checkbox_folha_rosto.setChecked(False)
+            self.caminho_caderneta = mostrar_dialogo_arquivo(
+                "Selecione a caderneta a ser continuada", "Documento do Word (*.docx);;",
+                "abrir", self.interface
+            )
+        else:
+            self.caminho_caderneta = None
+        self.interface.rotulo_ponto_inicio.setEnabled(continuar_caderneta)
+        self.interface.combobox_ponto_inicio.setEnabled(continuar_caderneta)
+
+    def botao_gerar_nova_caderneta_clicado(self):
         """
         Chama as funções do controlador para gerar a caderneta e exportá-la.
         :returns: Nada.
         """
+        ic()
+
         try:
             mostrar_cursor_espera()
             montar_folha_de_rosto = self.interface.checkbox_folha_rosto.isChecked()
-            self.modelo.gerar_caderneta(montar_folha_de_rosto)
+            montar_folhas_semestre = self.interface.checkbox_folhas_semestre.isChecked()
+            continuar_caderneta = self.caminho_caderneta
+            ponto_inicio = self.interface.combobox_ponto_inicio.currentText()
+            indice_ponto_inicio = self.modelo.df.index[self.modelo.df["Ponto"] == ponto_inicio]
+            self.modelo.gerar_caderneta(montar_folha_de_rosto, montar_folhas_semestre, indice_ponto_inicio, continuar_caderneta)
             mostrar_cursor_espera(False)
-            caminho = mostrar_dialogo_arquivo("Salvar documento da caderneta", "*.docx", modo="salvar")
-            if caminho != "":
-                self.modelo.salvar_caderneta(caminho)
+            caminho_saida = mostrar_dialogo_arquivo("Salvar documento da caderneta", "*.docx",
+                                                    modo="salvar")
+            if caminho_saida != "":
+                self.modelo.salvar_caderneta(caminho_saida)
                 mostrar_popup("Caderneta criada com sucesso!")
         except Exception as exception:
             mostrar_popup(f"{exception}", tipo_msg="erro", parent=self.interface)
+            ic(exception)
 
 
 def mostrar_dialogo_arquivo(titulo: str, filtro: str, modo="abrir", parent: QMainWindow = None):

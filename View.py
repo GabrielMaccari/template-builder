@@ -78,10 +78,38 @@ class Interface(QMainWindow):
         self.checkbox_folha_rosto.setToolTip("Gera uma página com informações do projeto no início da caderneta")
         self.checkbox_folha_rosto.setChecked(True)
 
+        # Checkbox para marcar se gera ou não as folhas de título dos semestres
+        self.checkbox_folhas_semestre = QCheckBox("Incluir folhas de título para cada semestre/disciplina")
+        self.checkbox_folhas_semestre.setToolTip("Gera páginas com o título da disciplina antes do primeiro ponto de "
+                                                 "cada semestre")
+        self.checkbox_folhas_semestre.setChecked(True)
+
+        # Checkbox para marcar se o usuário deseja continuar uma caderneta já existente
+        self.checkbox_continuar_caderneta = QCheckBox("Continuar caderneta existente")
+        self.checkbox_continuar_caderneta.setToolTip("Utilize esta opção para adicionar novos pontos a uma caderneta "
+                                                     "pré-existente (Ex: adicionar pontos do Map2 à caderneta do Map1).")
+
+        # Layout que organiza os widgets de seleção do ponto de início
+        layout_selecao_ponto_inicio = QHBoxLayout()
+
+        # Rótulo da seleção de ponto inicial
+        self.rotulo_ponto_inicio = QLabel("Iniciar a partir do ponto: ")
+        self.rotulo_ponto_inicio.setEnabled(False)
+
+        # Caixa de seleção do ponto inicial
+        self.combobox_ponto_inicio = QComboBox()
+        self.combobox_ponto_inicio.setStyleSheet("combobox-popup: 0;")
+        self.combobox_ponto_inicio.setMinimumWidth(100)
+        self.combobox_ponto_inicio.setEnabled(False)
+
+        layout_selecao_ponto_inicio.addWidget(self.rotulo_ponto_inicio)
+        layout_selecao_ponto_inicio.addWidget(self.combobox_ponto_inicio)
+        layout_selecao_ponto_inicio.addStretch(1)
+
         # Botão para gerar e exportar o template da caderneta
-        self.botao_gerar_modelo = QPushButton("Gerar caderneta")
-        self.botao_gerar_modelo.setMinimumHeight(35)
-        self.botao_gerar_modelo.setEnabled(False)
+        self.botao_gerar_nova_caderneta = QPushButton("Gerar caderneta")
+        self.botao_gerar_nova_caderneta.setMinimumHeight(35)
+        self.botao_gerar_nova_caderneta.setEnabled(False)
 
         # Layout mestre (aninha os widgets e demais layouts)
         layout_principal = QVBoxLayout()
@@ -92,7 +120,10 @@ class Interface(QMainWindow):
         layout_principal.addLayout(layout_central)
         layout_principal.addWidget(separador2)
         layout_principal.addWidget(self.checkbox_folha_rosto)
-        layout_principal.addWidget(self.botao_gerar_modelo)
+        layout_principal.addWidget(self.checkbox_folhas_semestre)
+        layout_principal.addWidget(self.checkbox_continuar_caderneta)
+        layout_principal.addLayout(layout_selecao_ponto_inicio)
+        layout_principal.addWidget(self.botao_gerar_nova_caderneta)
 
         # Painel contendo o layout
         container = QWidget(self)
@@ -147,6 +178,10 @@ class BotaoStatus(QPushButton):
             "outside_domain": {
                 "icone": QIcon("recursos_app/icones/not_ok.png"),
                 "tooltip": "Algumas células contêm valores\nfora da lista de valores permitidos"
+            },
+            "not_unique": {
+                "icone": QIcon("recursos_app/icones/not_ok.png"),
+                "tooltip": "Existem valores repetidos"
             }
         }
 

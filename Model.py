@@ -6,73 +6,141 @@
 import pandas
 import docx
 from datetime import datetime
+from icecream import ic
 
 COLUNAS_TABELA_CADERNETA = {
     "Ponto": {
-        "dtype": "object", "nulo_ok": False, "dominio": None
+        "dtype": "object",
+        "nulo_ok": False,
+        "dominio": None,
+        "unico": True
     },
     "Disciplina": {
-        "dtype": "object", "nulo_ok": False,
-        "dominio": ["Mapeamento Geológico I", "Mapeamento Geológico II"]
+        "dtype": "object",
+        "nulo_ok": False,
+        "dominio": ["Mapeamento Geológico I", "Mapeamento Geológico II"],
+        "unico": False
     },
     "SRC": {
-        "dtype": "object", "nulo_ok": False, "dominio": None
+        "dtype": "object",
+        "nulo_ok": False,
+        "dominio": None,
+        "unico": False
     },
     "Easting": {
-        "dtype": "float64", "nulo_ok": False, "dominio": None
+        "dtype": "float64",
+        "nulo_ok": False,
+        "dominio": None,
+        "unico": False
     },
     "Northing": {
-        "dtype": "float64", "nulo_ok": False, "dominio": None
+        "dtype": "float64",
+        "nulo_ok": False,
+        "dominio": None,
+        "unico": False
     },
     "Altitude": {
-        "dtype": "float64", "nulo_ok": True, "dominio": None
+        "dtype": "float64",
+        "nulo_ok": True,
+        "dominio": None,
+        "unico": False
     },
     "Toponimia": {
-        "dtype": "object", "nulo_ok": True, "dominio": None
+        "dtype": "object",
+        "nulo_ok": True,
+        "dominio": None,
+        "unico": False
     },
     "Data": {
-        "dtype": "datetime64[ns]", "nulo_ok": False, "dominio": None
+        "dtype": "datetime64[ns]",
+        "nulo_ok": False,
+        "dominio": None,
+        "unico": False
     },
     "Equipe": {
-        "dtype": "object", "nulo_ok": False, "dominio": None
+        "dtype": "object",
+        "nulo_ok": False,
+        "dominio": None,
+        "unico": False
     },
     "Ponto_de_controle": {
-        "dtype": "object", "nulo_ok": False, "dominio": ["Sim", "Não"]
+        "dtype": "object",
+        "nulo_ok": False,
+        "dominio": ["Sim", "Não"],
+        "unico": False
     },
     "Numero_de_amostras": {
-        "dtype": "int64", "nulo_ok": False, "dominio": None
+        "dtype": "int64",
+        "nulo_ok": False,
+        "dominio": None,
+        "unico": False
     },
     "Possui_croquis": {
-        "dtype": "object", "nulo_ok": False, "dominio": ["Sim", "Não"]
+        "dtype": "object",
+        "nulo_ok": False,
+        "dominio": ["Sim", "Não"],
+        "unico": False
     },
     "Possui_fotos": {
-        "dtype": "object", "nulo_ok": False, "dominio": ["Sim", "Não"]
+        "dtype": "object",
+        "nulo_ok": False,
+        "dominio": ["Sim", "Não"],
+        "unico": False
     },
     "Tipo_de_afloramento": {
-        "dtype": "object", "nulo_ok": True, "dominio": None
+        "dtype": "object",
+        "nulo_ok": True,
+        "dominio": None,
+        "unico": False
     },
     "In_situ": {
-        "dtype": "object", "nulo_ok": True, "dominio": ["Sim", "Não"]
+        "dtype": "object",
+        "nulo_ok": True,
+        "dominio": ["Sim", "Não"],
+        "unico": False
     },
     "Grau_de_intemperismo": {
-        "dtype": "object", "nulo_ok": True, "dominio": ["Baixo", "Médio", "Alto"]
+        "dtype": "object",
+        "nulo_ok": True,
+        "dominio": ["Baixo", "Médio", "Alto"],
+        "unico": False
     },
     "Unidade": {
-        "dtype": "object", "nulo_ok": True, "dominio": None
+        "dtype": "object",
+        "nulo_ok": True,
+        "dominio": None,
+        "unico": False
     },
     "Unidade_litoestratigrafica": {
-        "dtype": "object", "nulo_ok": True, "dominio": None
+        "dtype": "object",
+        "nulo_ok": True,
+        "dominio": None,
+        "unico": False
     }
 }
 
 
 class Modelo:
     def __init__(self, caminho_template: str, df: pandas.DataFrame = None):
-        self.caminho_template = caminho_template
-        self.template = docx.Document(caminho_template)
         self.df = df
+        self.caminho_template = None
+        self.template = None
+        self.estilos = None
         self.caderneta = None
 
+        self.carregar_template(caminho_template)
+
+    def carregar_template(self, caminho: str):
+        """
+        Carrega o template para a caderneta a partir de um arquivo .docx.
+        :param caminho: Caminho para o documento a ser usado como template.
+        :returns: Nada.
+        """
+        ic(caminho)
+
+        self.caminho_template = caminho
+        self.template = None  # NÃO REMOVER ISTO!! Evita um bug
+        self.template = docx.Document(caminho)
         self.estilos = {
             "normal": self.template.styles['Normal'],
             "titulo": self.template.styles['Title'],
@@ -93,6 +161,8 @@ class Modelo:
         :param caminho: O caminho até um arquivo .xlsx ou .xlsm.
         :returns: Boolean dizendo se o DataFrame foi criado com sucesso e Integer com o número de linhas do DataFrame
         """
+        ic(caminho)
+
         # Salva a primeira aba da tabela em um DataFrame
         df = pandas.read_excel(caminho, engine='openpyxl')
         # Converte os nomes das colunas para string
@@ -102,6 +172,9 @@ class Modelo:
         df.drop(colunas_remocao, axis='columns', inplace=True)
         # Descarta linhas vazias
         df.dropna(how='all', axis='index', inplace=True)
+
+        ic(df.columns)
+
         # Verifica se existem linhas preenchidas no arquivo
         linhas = len(df.index)
         if linhas <= 0:
@@ -120,6 +193,8 @@ class Modelo:
         O DataFrame é obtido do atributo "df" do controlador.
         :returns: Lista de strings especificando o status de cada coluna. O status pode ser "ok", "faltando", "problemas", "nulos" ou "dominio"
         """
+        ic()
+
         df = self.df
         colunas_df = df.columns.to_list()
 
@@ -128,6 +203,7 @@ class Modelo:
             dtype = COLUNAS_TABELA_CADERNETA[c]["dtype"]
             nulo_ok = COLUNAS_TABELA_CADERNETA[c]["nulo_ok"]
             dominio = COLUNAS_TABELA_CADERNETA[c]["dominio"]
+            unico = COLUNAS_TABELA_CADERNETA[c]["unico"]
 
             # Checa se a coluna existe na tabela
             if c not in colunas_df:
@@ -146,8 +222,7 @@ class Modelo:
                 status_colunas.append("wrong_dtype")
                 continue
 
-            # Verifica se a coluna possui valores controlados e se existe algum
-            # valor fora do domínio
+            # Verifica se a coluna possui valores controlados e se existe algum valor fora do domínio
             if dominio is not None:
                 valores_coluna = df[c]
                 if nulo_ok:
@@ -156,23 +231,43 @@ class Modelo:
                     status_colunas.append("outside_domain")
                     continue
 
+            # Checa se existem valores repetidos não-permitidos na coluna
+            if unico and not df[c].nunique() == df[c].count():
+                status_colunas.append("not_unique")
+                continue
+
             status_colunas.append("ok")
 
         return status_colunas
+
+    def localizar_valores_repetidos(self, coluna: str) -> list[int]:
+        """
+        Localiza as linhas da coluna especificada onde há valores repetidos/não-únicos.
+        :param coluna: O nome da coluna a ser verificada.
+        :returns: Lista contendo os índices das linhas com problema.
+        """
+        ic(coluna)
+
+        duplicados = self.df[self.df[coluna].duplicated(keep=False)]
+        duplicados = duplicados[coluna]
+        indices_problemas = [i for i, duplicado in zip(duplicados.index, duplicados.values) if duplicado]
+        return indices_problemas
 
     def localizar_problemas_formato(self, coluna: str) -> list[int]:
         """
         Localiza as linhas da tabela com problemas que impedem a conversão para o tipo de dado esperado.
         :param coluna: O nome da coluna a ser verificada.
-        :returns: Lista contendo os indexes das linhas com problema.
+        :returns: Lista contendo os índices das linhas com problema.
         """
-        valores = self.df[coluna].dropna()
+        ic(coluna)
+
+        valores_coluna = self.df[coluna].dropna()
         tipo_alvo = COLUNAS_TABELA_CADERNETA[coluna]["dtype"]
 
         funcoes_conversao = {
-            "datetime64[ns]": pandas.to_datetime(valores, errors="coerce", format="%d/%m/%Y").isna(),
-            "float64": pandas.to_numeric(valores, errors="coerce", downcast="float").isna(),
-            "int64": pandas.to_numeric(valores, errors="coerce", downcast="integer").isna()
+            "datetime64[ns]": pandas.to_datetime(valores_coluna, errors="coerce", format="%d/%m/%Y").isna(),
+            "float64": pandas.to_numeric(valores_coluna, errors="coerce", downcast="float").isna(),
+            "int64": pandas.to_numeric(valores_coluna, errors="coerce", downcast="integer").isna()
         }
 
         if tipo_alvo not in funcoes_conversao:
@@ -187,8 +282,10 @@ class Modelo:
         """
         Localiza as linhas da coluna especificada que contêm valores nulos.
         :param coluna: O nome da coluna a ser verificada.
-        :returns: Lista contendo os indexes das linhas com problema.
+        :returns: Lista contendo os índices das linhas com problema.
         """
+        ic(coluna)
+
         valores_coluna = self.df.loc[:, coluna]
         indices_problemas = self.df[valores_coluna.isnull()].index.tolist()
         return indices_problemas
@@ -197,8 +294,10 @@ class Modelo:
         """
         Localiza células em uma coluna com valores fora de domínio.
         :param coluna: O nome da coluna a ser verificada.
-        :returns: Lista contendo os indexes das linhas com problema.
+        :returns: Lista contendo os índices das linhas com problema.
         """
+        ic(coluna)
+
         valores_coluna = self.df.loc[:, coluna]
         dominio = COLUNAS_TABELA_CADERNETA[coluna]["dominio"]
         indices_problemas = valores_coluna.index[~valores_coluna.isin(dominio)].tolist()
@@ -212,6 +311,8 @@ class Modelo:
         :param indices: Os índices das linhas com problemas no DataFrame.
         :returns: String descrevendo o problema e as linhas que devem ser corrigidas.
         """
+        ic(tipo_problema, coluna, indices)
+
         dtype_coluna = str(COLUNAS_TABELA_CADERNETA[coluna]["dtype"])
 
         tipos_problemas = {
@@ -231,6 +332,10 @@ class Modelo:
             "outside_domain": (
                 f"A coluna \"{coluna}\" possui valores fora da lista de valores permitidos "
                 f"nas seguintes linhas. Corrija-os e tente novamente.\n"
+            ),
+            "not_unique": (
+                f"A coluna \"{coluna}\" possui valores repetidos nas seguintes linhas. "
+                f"Corrija-os e tente novamente.\n"
             )
         }
 
@@ -243,19 +348,32 @@ class Modelo:
 
         return "\n".join(mensagem)
 
-    def gerar_caderneta(self, montar_folha_de_rosto: bool = True):
+    def gerar_caderneta(self, montar_folha_de_rosto: bool = True, montar_folhas_semestre: bool = True,
+                        indice_inicio: int = 0, continuar_caderneta: str = None):
         """
         Gera a caderneta pré-preenchida.
         :param montar_folha_de_rosto: Opção para gerar ou não uma folha de rosto.
+        :param montar_folhas_semestre: Opção para gerar ou não páginas de título das disciplinas.
+        :param indice_inicio: O índice do DataFrame (ponto) no qual a montagem da caderneta deve iniciar.
+        :param continuar_caderneta: O caminho para uma caderneta pré-existente a ser continuada (.docx). Opcional.
         :returns: Nada.
         """
-        # Limpa todos os objetos da classe docx.Document para evitar bugs comuns
-        self.template = None
-        self.template = docx.Document(self.caminho_template)
-        self.caderneta = None
-        documento = None   # NÃO REMOVER ISTO!!!
+        ic(montar_folha_de_rosto, montar_folhas_semestre, indice_inicio, continuar_caderneta)
 
+        # NÃO REMOVER ISTO!!! Evita um bug
+        documento = None
+        self.caderneta = None
+
+        self.carregar_template(self.caminho_template if not continuar_caderneta else continuar_caderneta)
         documento = self.template
+
+        if not continuar_caderneta:
+            # Deleta o primeiro parágrafo do template (aquele aviso para não excluir o arquivo)
+            paragraph = documento.paragraphs[0]
+            p = paragraph._element
+            p.getparent().remove(p)
+            paragraph._p = paragraph._element = None
+
         df = self.df
         colunas_tabela = df.columns.to_list()
 
@@ -264,33 +382,31 @@ class Modelo:
                              else colunas_tabela[18:33])
 
         # Formata as datas
-        try:
-            df['Data'] = df['Data'].dt.strftime('%d/%m/%Y')
-        except:
-            pass
+        df['Data'] = df['Data'].dt.strftime('%d/%m/%Y')
 
         # Converte as colunas de Sim ou Não para booleanos
         df["Possui_croquis"] = df["Possui_croquis"].map({"Sim": True, "Não": False})
         df["Possui_fotos"] = df["Possui_fotos"].map({"Sim": True, "Não": False})
 
-        # Deleta o primeiro parágrafo do template (aviso para não excluir o arquivo)
-        paragraph = documento.paragraphs[0]
-        p = paragraph._element
-        p.getparent().remove(p)
-        paragraph._p = paragraph._element = None
-
         # Monta a folha de rosto da caderneta
         if montar_folha_de_rosto:
             documento = self.montar_folha_rosto(documento)
 
-        d = 1  # Número sequencial do semestre/disciplina. Ex: Map1 = 1
+        # Checa qual a diciplina/semestre do primeiro ponto a ser usado
+        disciplina_inicio = self.df.loc[indice_inicio, "Disciplina"].iloc[0]
+        d = 1 if disciplina_inicio == "Mapeamento Geológico I" else 2  # Número sequencial do semestre/disciplina. Ex: Map1 = 1
         disciplinas = COLUNAS_TABELA_CADERNETA["Disciplina"]["dominio"]
 
         for linha in df.itertuples():
-            # Adiciona uma página de título antes do primeiro ponto de cada semestre/disciplina
-            if d <= 2 and linha.Disciplina == disciplinas[d-1]:
-                documento = self.montar_pagina_semestre(documento, linha.Disciplina)
-                d += 1
+            # Pula linhas até chegar ao ponto de início
+            if linha.Index < indice_inicio:
+                continue
+
+            if montar_folhas_semestre:
+                # Adiciona uma página de título antes do primeiro ponto de cada semestre/disciplina
+                if d <= 2 and linha.Disciplina == disciplinas[d-1]:
+                    documento = self.montar_pagina_semestre(documento, linha.Disciplina)
+                    d += 1
 
             # Quebra a página antes do título do ponto
             documento.paragraphs[-1].add_run().add_break(docx.enum.text.WD_BREAK.PAGE)
@@ -306,6 +422,8 @@ class Modelo:
         :param documento: O documento.
         :returns: O documento com a folha de rosto.
         """
+        ic()
+
         for i in range(0, 15):
             if i == 10:
                 documento.add_paragraph(text='CADERNETA DE CAMPO COMPILADA',
@@ -332,6 +450,8 @@ class Modelo:
         :param disciplina: "Mapeamento Geológico I" ou "Mapeamento Geológico II".
         :returns: O documento com a página de título do semestre.
         """
+        ic(disciplina)
+
         try:  # Quando não há folha de rosto, o documento está inicialmente vazio, e isso causa um IndexError
             documento.paragraphs[-1].add_run().add_break(docx.enum.text.WD_BREAK.PAGE)
         except IndexError:
@@ -351,6 +471,7 @@ class Modelo:
         :param colunas_estrutura: Os nomes das colunas de medidas estruturais presentes na tabela.
         :returns: O documento com a página do ponto.
         """
+        ic(linha.Ponto, colunas_estrutura)
 
         # Valores das colunas para a linha
         ponto = linha.Ponto
@@ -475,17 +596,18 @@ class Modelo:
         :param caminho: O caminho do arquivo.
         :returns: Nada.
         """
+        ic(caminho)
+
         self.caderneta.core_properties.author = "Geologia UFSC"
         self.caderneta.core_properties.category = "Relatório Técnico"
-        self.caderneta.core_properties.comments = "Caderneta de campo compilada elaborada na disciplina de Mapeamento " \
-                                                  "Geológico do curso de graduação em Geologia da UFSC"
+        self.caderneta.core_properties.comments = ("Caderneta de campo compilada elaborada na disciplina de Mapeamento "
+                                                   "Geológico do curso de graduação em Geologia da UFSC")
         self.caderneta.core_properties.content_status = "Modelo"
         self.caderneta.core_properties.created = datetime.now()
         self.caderneta.core_properties.identifier = None
         self.caderneta.core_properties.keywords = "Geologia, Mapeamento Geológico"
         self.caderneta.core_properties.language = "Português (Brasil)"
         self.caderneta.core_properties.last_modified_by = "Geologia UFSC"
-        #self.caderneta.core_properties.last_printed = None
         self.caderneta.core_properties.modified = datetime.now()
         self.caderneta.core_properties.revision = 1
         self.caderneta.core_properties.subject = "Geologia"

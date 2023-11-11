@@ -86,8 +86,8 @@ class Interface(QMainWindow):
 
         # Checkbox para marcar se o usuário deseja continuar uma caderneta já existente
         self.checkbox_continuar_caderneta = QCheckBox("Continuar caderneta existente")
-        self.checkbox_continuar_caderneta.setToolTip("Utilize esta opção para adicionar novos pontos a uma caderneta "
-                                                     "pré-existente (Ex: adicionar pontos do Map2 à caderneta do Map1).")
+        self.checkbox_continuar_caderneta.setToolTip("Utilize esta opção para adicionar novos pontos a uma caderneta\n"
+                                                     "pré-existente (Ex: adicionar pontos do Map2 à caderneta do Map1)")
 
         # Layout que organiza os widgets de seleção do ponto de início
         layout_selecao_ponto_inicio = QHBoxLayout()

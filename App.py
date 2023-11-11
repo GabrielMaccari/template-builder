@@ -7,10 +7,22 @@ import sys
 from platform import platform
 from PyQt6.QtWidgets import QApplication
 from docx.opc.exceptions import PackageNotFoundError
+from icecream import ic
 
 from Model import Modelo
 from View import Interface
 from Controller import Controlador, mostrar_popup
+
+"""
+def log_to_file(text, mode='a'):
+    with open("log.log", mode, encoding="utf-8") as f:
+        f.write(f"{text}\n")
+
+
+ic.configureOutput(prefix='LOG| ', includeContext=True, outputFunction=log_to_file)
+log_to_file("------------------ LOG DA ÚLTIMA EXECUÇÃO ------------------", 'w')
+"""
+ic.configureOutput(prefix='LOG| ', includeContext=True)
 
 OS = platform()
 TEMPLATE = "recursos_app/modelos/template_estilos.docx"

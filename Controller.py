@@ -9,15 +9,6 @@ from PyQt6.QtCore import Qt
 from icecream import ic
 
 
-def log_to_file(text, mode='a'):
-    with open("log.log", mode, encoding="utf-8") as f:
-        f.write(f"{text}\n")
-
-
-ic.configureOutput(prefix='LOG| ', includeContext=True, outputFunction=log_to_file)
-log_to_file("------------------ LOG DA ÚLTIMA EXECUÇÃO ------------------", 'w')
-
-
 class Controlador:
     def __init__(self, modelo, interface):
         super(Controlador, self).__init__()
@@ -162,7 +153,7 @@ class Controlador:
             indice_ponto_inicio = self.modelo.df.index[self.modelo.df["Ponto"] == ponto_inicio]
             self.modelo.gerar_caderneta(montar_folha_de_rosto, montar_folhas_semestre, indice_ponto_inicio, continuar_caderneta)
             mostrar_cursor_espera(False)
-            caminho_saida = mostrar_dialogo_arquivo("Salvar documento da caderneta", "*.docx",
+            caminho_saida = mostrar_dialogo_arquivo("Salvar caderneta", "*.docx",
                                                     modo="salvar")
             if caminho_saida != "":
                 self.modelo.salvar_caderneta(caminho_saida)

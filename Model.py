@@ -380,9 +380,10 @@ class Modelo:
         # Na tabela da caderneta, as colunas 19-33 são potenciais colunas de medidas estruturais
         colunas_estrutura = (colunas_tabela[18:] if len(colunas_tabela) < 33
                              else colunas_tabela[18:33])
+        ic(colunas_estrutura)
 
         # Formata as datas
-        df['Data'] = df['Data'].dt.strftime('%d/%m/%Y')
+        df['Data_formatada'] = df['Data'].dt.strftime('%d/%m/%Y')
 
         # Converte as colunas de Sim ou Não para booleanos
         df["Possui_croquis"] = df["Possui_croquis"].map({"Sim": True, "Não": False})
@@ -471,7 +472,7 @@ class Modelo:
         :param colunas_estrutura: Os nomes das colunas de medidas estruturais presentes na tabela.
         :returns: O documento com a página do ponto.
         """
-        ic(linha.Ponto, colunas_estrutura)
+        ic(linha.Ponto)
 
         # Valores das colunas para a linha
         ponto = linha.Ponto
@@ -480,7 +481,7 @@ class Modelo:
         northing = linha.Northing
         altitude = linha.Altitude
         toponimia = linha.Toponimia
-        data = linha.Data
+        data = linha.Data_formatada
         equipe = linha.Equipe
         ponto_controle = linha.Ponto_de_controle
         num_amostras = linha.Numero_de_amostras
@@ -498,7 +499,7 @@ class Modelo:
         # Dicionário com informações que irão para a tabela de cabeçalho
         dados_tabela = {
             'DATA:': f"{data}",
-            'COORDENADAS:': f"{easting:.0f}E {northing:.0f}N   {src}",
+            'COORDENADAS:': f"{easting:.0f} E {northing:.0f} N   {src}",
             'ALTITUDE:': f"{altitude:.0f} m" if not pandas.isna(altitude) else "-",
             'TOPONÍMIA:': f"{toponimia}" if not pandas.isna(toponimia) else "-",
             'EQUIPE:': f"{equipe}",

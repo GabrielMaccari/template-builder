@@ -106,11 +106,14 @@ Para adicionar novos pontos a uma caderneta gerada anteriormente (como quando é
 - Clique em "Gerar caderneta", aguarde o processamento e escolha o local de salvamento do arquivo.
 
 ## Erros comuns durante a execução da ferramenta
-### “Dependência não encontrada: [...]/recursos_app/modelos/template_estilos.docx. Restaure o arquivo a partir do repositório e tente novamente.” (ao abrir a ferramenta)
+**“Dependência não encontrada: [...]/recursos_app/modelos/template_estilos.docx. Restaure o arquivo a partir do repositório e tente novamente.” (ao abrir a ferramenta)**
+
 A ferramenta depende de um arquivo “template_estilos.docx” com estilos pré-definidos para funcionar. Esse arquivo se encontra na pasta recursos_app/modelos, que deve ficar junto ao executável da ferramenta. Caso o arquivo ou a pasta em questão sejam excluídos ou movidos para outro local, ocorrerá esse erro, e basta restaurá-los ao local original para solucioná-lo.
 
-### Os ícones da interface não estão sendo exibidos.
+**Os ícones da interface não estão sendo exibidos.**
+
 De forma similar ao erro anterior, basta restaurar os ícones da interface para a pasta recursos_app/icones a partir do arquivo baixado ou do repositório.
 
-### “ERRO: [Errno 13] Permission denied: [...].docx” (ao salvar a caderneta)
+**“ERRO: [Errno 13] Permission denied: [...].docx” (ao salvar a caderneta)**
+
 Caso você já tenha gerado a caderneta anteriormente com a ferramenta e esteja gerando um novo arquivo no mesmo caminho, verifique se o arquivo anterior não está aberto em outro programa (Ex: Word). Se não for o caso, tente escolher outra pasta para salvar o arquivo (Ex: Área de trabalho, Downloads, Documentos).

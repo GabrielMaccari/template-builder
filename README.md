@@ -1,10 +1,10 @@
 <div align="center"/>
   <p>
     <h1>Template Builder</h1>
-      <h4>
+      <p>
         Ferramenta para preenchimento semiautomático dos cabeçalhos da caderneta de campo compilada para a disciplina de Mapeamento Geológico do curso de graduação
         em Geologia da UFSC.
-      </h4>
+      </p>
       </br>
      Acesse a página de <a href="https://github.com/FrostPredator/template-builder/releases">releases</a> para baixar.
   <p>
@@ -13,8 +13,11 @@
 ![panel](https://github.com/FrostPredator/template-builder/assets/114439033/5fed2970-3bc1-433f-8cb7-32f1ce5bd38d)
 
 ## Instruções de uso
-### Como preencher a tabela de pontos
-#### Passo 1: Configurando as listas de opções
+ * [Preenchendo a tabela da caderneta](#preenchendo-a-tabela-da-caderneta)
+ * [Gerando uma nova caderneta](#gerando-uma-nova-caderneta)
+ * [Adicionando novos pontos a uma caderneta pré-existente](#adicionando-novos-pontos-a-uma-caderneta)
+### Preenchendo a tabela da caderneta
+#### Passo 1: Configure a lista de opções
 - Abra o arquivo “tabela_caderneta.xlsx” utilizando o Microsoft Office Excel ou outro software de edição de planilhas.
 - Acesse a segunda aba do arquivo (planilha “Listas”).
 
@@ -34,15 +37,21 @@ O preenchimento da lista de estruturas, por outro lado, adiciona as estruturas i
 
 ![image](https://github.com/FrostPredator/template-builder/assets/114439033/3d045c8f-f772-4209-8337-86465ab0aad9)
 
-#### Passo 2: Preenchendo a tabela pós-campo
+#### Passo 2: Preencha os campos da tabela
 A tabela deve ser preenchida diretamente a partir dos dados da caderneta de campo.
-Evite colar dados de outras tabelas e softwares. **Quando colar quaisquer dados, utilize a colagem apenas de valores**. No Microsoft Office Excel, essa opção pode ser encontrada clicando com o botão direito do mouse na célula alvo da colagem, acessando a opção “Colar Especial...” e selecionando “Valores” (símbolo de prancheta com “123”). Isso impede que a formatação de validação dos dados seja substituída.
-Você pode utilizar acentos, cedilhas e caracteres especiais no preenchimento dos campos.
-**NÃO insira ou exclua colunas.**
+Evite colar dados de outras tabelas e softwares. **Quando colar quaisquer dados, utilize a colagem apenas de valores**. No Microsoft Office Excel, essa opção pode ser encontrada clicando com o botão direito do mouse na célula alvo da colagem, acessando a opção “Colar Especial...” e selecionando “Valores” (símbolo de prancheta com “123”). Isso impede que a formatação de validação dos dados seja substituída ao colar.
+
+Você **pode** utilizar acentos, cedilhas e caracteres especiais no preenchimento dos campos.
+
+**NÃO insira ou exclua colunas manualmente.**
+
 **NÃO edite os nomes das colunas.**
+
 **NÃO troque a ordem das colunas.**
-**Siga as instruções de preenchimento abaixo para cada coluna.**
+
 **Salve a tabela usando os formatos .xlsx ou .xlsm.**
+
+**Siga as instruções de preenchimento abaixo para cada coluna.**
 
 - **Ponto:** O código do ponto de campo. Ex: PTI-2001. **Não deixe em branco**. Preencha na ordem de numeração.
 - **Disciplina:** A disciplina na qual o ponto foi visitado pela primeira vez. Preencha com “Mapeamento Geológico I” ou “Mapeamento Geológico II”. **Não deixe em branco**. Preencha apenas de forma contínua (depois que preencher uma linha com “Mapeamento Geológico II”, não preencha nenhuma linha seguinte com “Mapeamento Geológico I”).
@@ -66,9 +75,9 @@ Você pode utilizar acentos, cedilhas e caracteres especiais no preenchimento do
 - **Unidade:** A unidade maior na qual a litologia principal do ponto está contida. O preenchimento deste campo deve ser feito conforme as unidades listadas na segunda aba da planilha. Ex: "Complexo Metamórfico Brusque", "Suíte Valsungana", "Coberturas Cenozoicas", etc. Caso o ponto em questão seja um ponto de contato entre duas unidades, acrescente na aba de Listas uma unidade mista, separada por “/” (Ex: "Grupo Itararé / Grupo Itajaí"), e então preencha o ponto com a unidade adicionada.
 - **Unidade_litoestratigrafica:** A unidade litoestratigráfica específica na qual a litologia principal do ponto está contida. O preenchimento deste campo deve ser feito conforme as unidades litoestratigráficas listadas na segunda aba da planilha. Ex: "Formação Rio Bonito", "Granodiorito Estaleiro", etc. Caso o ponto em questão seja um ponto de contato entre duas unidades, acrescente na aba de Listas uma unidade mista, separada por “/” (Ex: "Formação Taciba / Formação Campo Mourão"), e então preencha o ponto com a unidade adicionada.
 - **_Campos de estruturas_:** Preencha com as medidas tiradas para a estrutura em questão, separadas por vírgula e espaço. Caso haja mais de uma medida da mesma estrutura no mesmo ponto, separe-as com vírgula e espaço, ordenando da mais confiável para a mais duvidosa. No caso de medidas planares, use preferencialmente a notação sentido de mergulho/mergulho (Ex: "180/30", "020/40"). Para medidas lineares, utilize mergulho-sentido de mergulho (Ex: "55-340", "70-080"). Use sempre 3 dígitos para o sentido e 2 dígitos para o mergulho.
- 
+
 ### Gerando uma nova caderneta
-- Execute o Template Builder (arquivo .exe ou .elf).
+- Execute o Template Builder (arquivo .exe).
 - Clique no botão “Selecionar” e escolha a tabela preenchida nos passos anteriores.
 A ferramenta irá analisar se os dados de cada coluna essencial estão no formato correto e mostrará em sua interface. Colunas no formato correto terão o ícone ![ok](https://github.com/FrostPredator/template-builder/assets/114439033/86bfa387-320b-44e7-a71e-f8a474fd1ce2) ao lado enquanto colunas com problemas aparecerão com o ícone ![not_ok](https://github.com/FrostPredator/template-builder/assets/114439033/3e9c5ee1-99d1-4185-b1a9-4e4001d33f09):
  
@@ -83,27 +92,25 @@ Recomenda-se que seja utilizada apenas a tabela fornecida junto à ferramenta pa
 - Com todas as colunas devidamente corrigidas, clique no botão “Gerar caderneta” para preencher o template com os dados da tabela. 
 - Depois disso, em um editor de texto, basta adicionar as descrições dos afloramentos e amostras, assim como os painéis de croquis e fotos.
 
-<sub>Obs: Devido a diferenças de software, podem haver problemas de formatação caso a caderneta seja editada no Google Docs. Recomenda-se que seja utilizado o Microsoft Office Word ou, no caso de alternativas gratuitas, o ONLYOFFICE ou Softmaker FreeOffice. Para edição colaborativa, a versão online do Word pode ser usada gratuitamente.</sub>
+<sub>Obs: Devido a diferenças de software, podem haver problemas de formatação caso a caderneta seja editada no Google Docs ou LibreOffice. Recomenda-se que seja utilizado o Microsoft Office Word ou, no caso de alternativas gratuitas, o ONLYOFFICE ou Softmaker FreeOffice. Para edição colaborativa, a versão online do Word pode ser usada gratuitamente.</sub>
 
-### Adicionando novos pontos a uma caderneta pré-existente
+### Adicionando novos pontos a uma caderneta
 Para adicionar novos pontos a uma caderneta gerada anteriormente (como quando é preciso adicionar pontos do Map2 à caderneta já preenchida do Map1):
 
-- Execute o Template Builder (arquivo .exe ou .elf).
-- Clique no botão “Selecionar” e escolha a tabela preenchida com os novos pontos.
-- Verifique e corrija quaisquer problemas contidos nos dados da tabela e indicados na interface, conforme explicado no tópico anterior.
+- Execute o Template Builder (arquivo .exe).
+- Clique no botão “Selecionar” e escolha a tabela preenchida com os novos pontos (você pode utilizar a tabela contendo todos os pontos, tanto do Map1 quanto do Map2).
+- Verifique e corrija quaisquer problemas contidos nos dados da tabela e indicados na interface, conforme explicado na seção anterior.
 - Desmarque a opção "Incluir folha de rosto no início da caderneta".
 - Marque a opção "Continuar caderneta existente". Uma janela de seleção de arquivo surgirá, para que você selecione a caderneta (arquivo .docx) à qual deseja adicionar os novos pontos.
 - Na caixa "Iniciar a partir do ponto", escolha o ponto de início dos dados novos.
 - Clique em "Gerar caderneta", aguarde o processamento e escolha o local de salvamento do arquivo.
 
-#### Erros comuns durante a execução da ferramenta
-##### “Dependência não encontrada: [...]/recursos_app/modelos/template_estilos.docx. Restaure o arquivo a partir do repositório e tente novamente.” (ao abrir a ferramenta)
+## Erros comuns durante a execução da ferramenta
+### “Dependência não encontrada: [...]/recursos_app/modelos/template_estilos.docx. Restaure o arquivo a partir do repositório e tente novamente.” (ao abrir a ferramenta)
 A ferramenta depende de um arquivo “template_estilos.docx” com estilos pré-definidos para funcionar. Esse arquivo se encontra na pasta recursos_app/modelos, que deve ficar junto ao executável da ferramenta. Caso o arquivo ou a pasta em questão sejam excluídos ou movidos para outro local, ocorrerá esse erro, e basta restaurá-los ao local original para solucioná-lo.
 
-##### Os ícones da interface não estão sendo exibidos.
+### Os ícones da interface não estão sendo exibidos.
 De forma similar ao erro anterior, basta restaurar os ícones da interface para a pasta recursos_app/icones a partir do arquivo baixado ou do repositório.
 
-##### “ERRO: [Errno 13] Permission denied: [...].docx” (ao salvar a caderneta)
+### “ERRO: [Errno 13] Permission denied: [...].docx” (ao salvar a caderneta)
 Caso você já tenha gerado a caderneta anteriormente com a ferramenta e esteja gerando um novo arquivo no mesmo caminho, verifique se o arquivo anterior não está aberto em outro programa (Ex: Word). Se não for o caso, tente escolher outra pasta para salvar o arquivo (Ex: Área de trabalho, Downloads, Documentos).
-
-####

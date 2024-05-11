@@ -13,19 +13,19 @@ from Model import Modelo
 from View import Interface
 from Controller import Controlador, mostrar_popup
 
+ic.configureOutput(prefix='LOG| ', includeContext=True)
 """
+# Configuração para geração de logs de execução (Obs: NÃO FUNCIONA COM PYINSTALLER!!!)
 def log_to_file(text, mode='a'):
     with open("log.log", mode, encoding="utf-8") as f:
         f.write(f"{text}\n")
-
-
 ic.configureOutput(prefix='LOG| ', includeContext=True, outputFunction=log_to_file)
 log_to_file("------------------ LOG DA ÚLTIMA EXECUÇÃO ------------------", 'w')
+# ------------------------------------------------------------------------------------
 """
-ic.configureOutput(prefix='LOG| ', includeContext=True)
 
 OS = platform()
-TEMPLATE = "recursos_app/modelos/template_estilos.docx"
+TEMPLATE = "config/modelos/template_estilos.docx"
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

@@ -19,7 +19,7 @@ class Interface(QMainWindow):
 
         # Constrói a interface -----
         self.setWindowTitle('Template Builder')
-        self.setWindowIcon(QIcon('recursos_app/icones/book.png'))
+        self.setWindowIcon(QIcon('config/icones/book.png'))
 
         # Rótulo do nome do arquivo
         self.rotulo_arquivo = QLabel("Selecione um arquivo .xlsx com os dados dos pontos mapeados.")
@@ -156,31 +156,31 @@ class BotaoStatus(QPushButton):
         """
         dic_botoes = {
             "none": {
-                "icone": QIcon("recursos_app/icones/circle.png"),
+                "icone": QIcon("config/icones/circle.png"),
                 "tooltip": "Carregue um arquivo"
             },
             "ok": {
-                "icone": QIcon("recursos_app/icones/ok.png"),
+                "icone": QIcon("config/icones/ok.png"),
                 "tooltip": "OK"
             },
             "missing_column": {
-                "icone": QIcon("recursos_app/icones/not_ok.png"),
+                "icone": QIcon("config/icones/not_ok.png"),
                 "tooltip": "Coluna não encontrada na tabela"
             },
             "wrong_dtype": {
-                "icone": QIcon("recursos_app/icones/not_ok.png"),
+                "icone": QIcon("config/icones/not_ok.png"),
                 "tooltip": "A coluna contém dados com\nformato errado"
             },
             "nan_not_allowed": {
-                "icone": QIcon("recursos_app/icones/not_ok.png"),
+                "icone": QIcon("config/icones/not_ok.png"),
                 "tooltip": "A coluna não permite nulos,\nmas existem células vazias"
             },
             "outside_domain": {
-                "icone": QIcon("recursos_app/icones/not_ok.png"),
+                "icone": QIcon("config/icones/not_ok.png"),
                 "tooltip": "Algumas células contêm valores\nfora da lista de valores permitidos"
             },
             "not_unique": {
-                "icone": QIcon("recursos_app/icones/not_ok.png"),
+                "icone": QIcon("config/icones/not_ok.png"),
                 "tooltip": "Existem valores repetidos"
             }
         }

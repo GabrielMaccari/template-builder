@@ -153,7 +153,7 @@ class Controlador:
             indice_ponto_inicio = self.modelo.df.index[self.modelo.df["Ponto"] == ponto_inicio]
             self.modelo.gerar_caderneta(montar_folha_de_rosto, montar_folhas_semestre, indice_ponto_inicio, continuar_caderneta)
             mostrar_cursor_espera(False)
-            caminho_saida = mostrar_dialogo_arquivo("Salvar caderneta", "*.docx",
+            caminho_saida = mostrar_dialogo_arquivo("Salvar caderneta", "Documento do Word (*.docx)",
                                                     modo="salvar")
             if caminho_saida != "":
                 self.modelo.salvar_caderneta(caminho_saida)
@@ -205,8 +205,8 @@ def mostrar_popup(mensagem: str, tipo_msg: str = "notificacao", parent: QMainWin
     :returns: Nada.
     """
     tipos_popup = {
-        "notificacao": {"titulo": "Notificação", "icone": "recursos_app/icones/info.png"},
-        "erro":        {"titulo": "Erro",        "icone": "recursos_app/icones/error.png"}
+        "notificacao": {"titulo": "Notificação", "icone": "config/icones/info.png"},
+        "erro":        {"titulo": "Erro",        "icone": "config/icones/error.png"}
     }
     title = tipos_popup[tipo_msg]["titulo"]
     icon = QIcon(tipos_popup[tipo_msg]["icone"])

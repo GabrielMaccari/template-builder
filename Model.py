@@ -28,19 +28,19 @@ COLUNAS_TABELA_CADERNETA = {
         "unico": False
     },
     "Easting": {
-        "dtype": "float64",
+        "dtype": "float32",
         "nulo_ok": False,
         "dominio": None,
         "unico": False
     },
     "Northing": {
-        "dtype": "float64",
+        "dtype": "float32",
         "nulo_ok": False,
         "dominio": None,
         "unico": False
     },
     "Altitude": {
-        "dtype": "float64",
+        "dtype": "float32",
         "nulo_ok": True,
         "dominio": None,
         "unico": False
@@ -70,7 +70,7 @@ COLUNAS_TABELA_CADERNETA = {
         "unico": False
     },
     "Numero_de_amostras": {
-        "dtype": "int64",
+        "dtype": "uint8",
         "nulo_ok": False,
         "dominio": None,
         "unico": False
@@ -136,10 +136,14 @@ class Modelo:
         :param caminho: Caminho para o documento a ser usado como template.
         :returns: Nada.
         """
-        ic(caminho)
+        ic()
 
         self.caminho_template = caminho
-        self.template = None  # NÃO REMOVER ISTO!! Evita um bug
+
+        # Essa linha evitava um bug que stackava cadernetas quando mais de uma era gerada na mesma execução da
+        # ferramenta. Eu não sei se esse bug ainda acontece, mas deixei a linha aqui por garantia
+        self.template = None
+
         self.template = docx.Document(caminho)
         self.estilos = {
             "normal": self.template.styles['Normal'],
@@ -173,7 +177,7 @@ class Modelo:
         # Descarta linhas vazias
         df.dropna(how='all', axis='index', inplace=True)
 
-        ic(df.columns)
+        ic(df.dtypes)
 
         # Verifica se existem linhas preenchidas no arquivo
         linhas = len(df.index)
@@ -266,12 +270,12 @@ class Modelo:
 
         funcoes_conversao = {
             "datetime64[ns]": pandas.to_datetime(valores_coluna, errors="coerce", format="%d/%m/%Y").isna(),
-            "float64": pandas.to_numeric(valores_coluna, errors="coerce", downcast="float").isna(),
-            "int64": pandas.to_numeric(valores_coluna, errors="coerce", downcast="integer").isna()
+            "float32": pandas.to_numeric(valores_coluna, errors="coerce", downcast="float").isna(),
+            "uint8": pandas.to_numeric(valores_coluna, errors="coerce", downcast="unsigned").isna()
         }
 
         if tipo_alvo not in funcoes_conversao:
-            raise Exception(f"Checagem não implementada para o tipo de dado ({tipo_alvo})")
+            raise Exception(f"Checagem não implementada para o tipo de dado presente na coluna {coluna} ({tipo_alvo}).")
 
         # Valores que não podem ser convertidos tornam-se NaN devido ao "coerce"
         convertido = funcoes_conversao[tipo_alvo]
@@ -323,6 +327,7 @@ class Modelo:
             ),
             "wrong_dtype": (
                 f"A coluna \"{coluna}\" possui dados fora do formato aceito ({dtype_coluna}) "
+                f"ou fora dos limites esperados para o tipo de dado "
                 f"nas linhas especificadas abaixo. Corrija-os e tente novamente.\n"
             ),
             "nan_not_allowed": (
@@ -349,7 +354,7 @@ class Modelo:
         return "\n".join(mensagem)
 
     def gerar_caderneta(self, montar_folha_de_rosto: bool = True, montar_folhas_semestre: bool = True,
-                        indice_inicio: int = 0, continuar_caderneta: str = None):
+                        indice_inicio: int | pandas.Index = 0, continuar_caderneta: str = None):
         """
         Gera a caderneta pré-preenchida.
         :param montar_folha_de_rosto: Opção para gerar ou não uma folha de rosto.
@@ -360,8 +365,10 @@ class Modelo:
         """
         ic(montar_folha_de_rosto, montar_folhas_semestre, indice_inicio, continuar_caderneta)
 
-        # NÃO REMOVER ISTO!!! Evita um bug
+        # Essa linha evitava um bug que stackava cadernetas quando mais de uma era gerada na mesma execução da
+        # ferramenta. Eu não sei se esse bug ainda acontece, mas deixei a linha aqui por garantia
         documento = None
+
         self.caderneta = None
 
         self.carregar_template(self.caminho_template if not continuar_caderneta else continuar_caderneta)
@@ -377,13 +384,13 @@ class Modelo:
         df = self.df
         colunas_tabela = df.columns.to_list()
 
-        # Na tabela da caderneta, as colunas 19-33 são potenciais colunas de medidas estruturais
-        colunas_estrutura = (colunas_tabela[18:] if len(colunas_tabela) < 33
-                             else colunas_tabela[18:33])
+        # Na tabela da caderneta, as colunas 19-38 são slots para medidas estruturais
+        colunas_estrutura = (colunas_tabela[18:] if len(colunas_tabela) < 38
+                             else colunas_tabela[18:38])
         ic(colunas_estrutura)
 
         # Formata as datas
-        df['Data_formatada'] = df['Data'].dt.strftime('%d/%m/%Y')
+        df['Data'] = df['Data'].dt.strftime('%d/%m/%Y')
 
         # Converte as colunas de Sim ou Não para booleanos
         df["Possui_croquis"] = df["Possui_croquis"].map({"Sim": True, "Não": False})
@@ -481,7 +488,7 @@ class Modelo:
         northing = linha.Northing
         altitude = linha.Altitude
         toponimia = linha.Toponimia
-        data = linha.Data_formatada
+        data = linha.Data
         equipe = linha.Equipe
         ponto_controle = linha.Ponto_de_controle
         num_amostras = linha.Numero_de_amostras

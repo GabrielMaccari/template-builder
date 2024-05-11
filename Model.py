@@ -13,108 +13,126 @@ COLUNAS_TABELA_CADERNETA = {
         "dtype": "object",
         "nulo_ok": False,
         "dominio": None,
+        "intervalo": None,
         "unico": True
     },
     "Disciplina": {
         "dtype": "object",
         "nulo_ok": False,
         "dominio": ["Mapeamento Geológico I", "Mapeamento Geológico II"],
+        "intervalo": None,
         "unico": False
     },
     "SRC": {
         "dtype": "object",
         "nulo_ok": False,
         "dominio": None,
+        "intervalo": None,
         "unico": False
     },
     "Easting": {
-        "dtype": "float32",
+        "dtype": "float64",
         "nulo_ok": False,
         "dominio": None,
+        "intervalo": (165000, 835000),
         "unico": False
     },
     "Northing": {
-        "dtype": "float32",
+        "dtype": "float64",
         "nulo_ok": False,
         "dominio": None,
+        "intervalo": (1099000, 10000000),
         "unico": False
     },
     "Altitude": {
-        "dtype": "float32",
+        "dtype": "float64",
         "nulo_ok": True,
         "dominio": None,
+        "intervalo": (0, 8849),
         "unico": False
     },
     "Toponimia": {
         "dtype": "object",
         "nulo_ok": True,
         "dominio": None,
+        "intervalo": None,
         "unico": False
     },
     "Data": {
         "dtype": "datetime64[ns]",
         "nulo_ok": False,
         "dominio": None,
+        "intervalo": None,
         "unico": False
     },
     "Equipe": {
         "dtype": "object",
         "nulo_ok": False,
         "dominio": None,
+        "intervalo": None,
         "unico": False
     },
     "Ponto_de_controle": {
         "dtype": "object",
         "nulo_ok": False,
         "dominio": ["Sim", "Não"],
+        "intervalo": None,
         "unico": False
     },
     "Numero_de_amostras": {
-        "dtype": "uint8",
+        "dtype": "int64",
         "nulo_ok": False,
         "dominio": None,
+        "intervalo": (0, 255),
         "unico": False
     },
     "Possui_croquis": {
         "dtype": "object",
         "nulo_ok": False,
         "dominio": ["Sim", "Não"],
+        "intervalo": None,
         "unico": False
     },
     "Possui_fotos": {
         "dtype": "object",
         "nulo_ok": False,
         "dominio": ["Sim", "Não"],
+        "intervalo": None,
         "unico": False
     },
     "Tipo_de_afloramento": {
         "dtype": "object",
         "nulo_ok": True,
         "dominio": None,
+        "intervalo": None,
         "unico": False
     },
     "In_situ": {
         "dtype": "object",
         "nulo_ok": True,
         "dominio": ["Sim", "Não"],
+        "intervalo": None,
         "unico": False
     },
     "Grau_de_intemperismo": {
         "dtype": "object",
         "nulo_ok": True,
         "dominio": ["Baixo", "Médio", "Alto"],
+        "intervalo": None,
         "unico": False
     },
     "Unidade": {
         "dtype": "object",
         "nulo_ok": True,
         "dominio": None,
+        "intervalo": None,
         "unico": False
     },
     "Unidade_litoestratigrafica": {
         "dtype": "object",
         "nulo_ok": True,
         "dominio": None,
+        "intervalo": None,
         "unico": False
     }
 }
@@ -207,6 +225,7 @@ class Modelo:
             dtype = COLUNAS_TABELA_CADERNETA[c]["dtype"]
             nulo_ok = COLUNAS_TABELA_CADERNETA[c]["nulo_ok"]
             dominio = COLUNAS_TABELA_CADERNETA[c]["dominio"]
+            intervalo = COLUNAS_TABELA_CADERNETA[c]["intervalo"]
             unico = COLUNAS_TABELA_CADERNETA[c]["unico"]
 
             # Checa se a coluna existe na tabela
@@ -233,6 +252,15 @@ class Modelo:
                     valores_coluna.dropna(inplace=True)
                 if not valores_coluna.isin(dominio).all():
                     status_colunas.append("outside_domain")
+                    continue
+
+            # Verifica se valores numéricos da coluna estão dentro do intervalo esperado
+            if intervalo is not None:
+                valores_coluna = df[c]
+                if nulo_ok:
+                    valores_coluna.dropna(inplace=True)
+                if not valores_coluna.between(intervalo[0], intervalo[1]).all():
+                    status_colunas.append("outside_range")
                     continue
 
             # Checa se existem valores repetidos não-permitidos na coluna
@@ -270,8 +298,8 @@ class Modelo:
 
         funcoes_conversao = {
             "datetime64[ns]": pandas.to_datetime(valores_coluna, errors="coerce", format="%d/%m/%Y").isna(),
-            "float32": pandas.to_numeric(valores_coluna, errors="coerce", downcast="float").isna(),
-            "uint8": pandas.to_numeric(valores_coluna, errors="coerce", downcast="unsigned").isna()
+            "float64": pandas.to_numeric(valores_coluna, errors="coerce", downcast="float").isna(),
+            "int64": pandas.to_numeric(valores_coluna, errors="coerce", downcast="integer").isna()
         }
 
         if tipo_alvo not in funcoes_conversao:
@@ -307,6 +335,19 @@ class Modelo:
         indices_problemas = valores_coluna.index[~valores_coluna.isin(dominio)].tolist()
         return indices_problemas
 
+    def localizar_problemas_intervalo(self, coluna: str) -> list[int]:
+        """
+        Localiza células em uma coluna com valores numéricos fora do intervalo permitido.
+        :param coluna: O nome da coluna a ser verificada.
+        :returns: Lista contendo os índices das linhas com problema.
+        """
+        ic(coluna)
+
+        valores_coluna = self.df.loc[:, coluna]
+        intervalo = COLUNAS_TABELA_CADERNETA[coluna]["intervalo"]
+        indices_problemas = valores_coluna.index[~valores_coluna.between(intervalo[0], intervalo[1])].tolist()
+        return indices_problemas
+
     def montar_msg_problemas(self, tipo_problema: str, coluna: str, indices: list[int]) -> str:
         """
         Monta a mensagem especificando quais linhas da tabela estão com problemas.
@@ -336,6 +377,10 @@ class Modelo:
             ),
             "outside_domain": (
                 f"A coluna \"{coluna}\" possui valores fora da lista de valores permitidos "
+                f"nas seguintes linhas. Corrija-os e tente novamente.\n"
+            ),
+            "outside_range": (
+                f"A coluna \"{coluna}\" possui valores fora do intervalo numérico permitido "
                 f"nas seguintes linhas. Corrija-os e tente novamente.\n"
             ),
             "not_unique": (

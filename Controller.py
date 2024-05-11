@@ -63,7 +63,7 @@ class Controlador:
                 mostrar_popup(
                     "Atenção! Existem colunas com nomes inválidos na tabela que podem causar erros ou "
                     "anomalias no funcionamento da ferramenta. Verifique se as fórmulas presentes nas células de "
-                    "cabeçalho das colunas de estruturas (colunas S a AG) não foram comprometidas. Isso geralmente "
+                    "cabeçalho das colunas de estruturas (colunas S a AL) não foram comprometidas. Isso geralmente "
                     "ocorre ao recortar e colar células na aba de Listas ao preencher as estruturas.",
                     parent=self.interface
                 )
@@ -103,6 +103,7 @@ class Controlador:
                 "wrong_dtype": self.modelo.localizar_problemas_formato,
                 "nan_not_allowed": self.modelo.localizar_celulas_vazias,
                 "outside_domain": self.modelo.localizar_problemas_dominio,
+                "outside_range": self.modelo.localizar_problemas_intervalo,
                 "not_unique": self.modelo.localizar_valores_repetidos
             }
 

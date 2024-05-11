@@ -179,6 +179,10 @@ class BotaoStatus(QPushButton):
                 "icone": QIcon("config/icones/not_ok.png"),
                 "tooltip": "Algumas células contêm valores\nfora da lista de valores permitidos"
             },
+            "outside_range": {
+                "icone": QIcon("config/icones/not_ok.png"),
+                "tooltip": "Algumas células contêm valores\nnuméricos fora do intervalo permitido"
+            },
             "not_unique": {
                 "icone": QIcon("config/icones/not_ok.png"),
                 "tooltip": "Existem valores repetidos"

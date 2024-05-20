@@ -1,3 +1,3 @@
 Name convention: template_builder-vx.y.z-os.exe
 
-pyinstaller "App.py" --distpath="template_builder-vx.y.z" --upx-dir="..\upx-4.2.0-win64" --clean --onefile --noconsole --icon="recursos_app\icones\book.ico"
+pyinstaller "App.py" --distpath="template_builder-v3.5.0" --upx-dir="..\upx-4.2.4-win64" --clean --onefile --noconsole --icon="config\icones\book.ico"

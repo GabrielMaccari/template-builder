@@ -526,41 +526,26 @@ class Modelo:
         """
         ic(linha.Ponto)
 
-        # Valores das colunas para a linha
-        ponto = linha.Ponto
-        src = linha.SRC
-        easting = linha.Easting
-        northing = linha.Northing
-        altitude = linha.Altitude
-        toponimia = linha.Toponimia
-        data = linha.Data
-        equipe = linha.Equipe
-        ponto_controle = linha.Ponto_de_controle
-        num_amostras = linha.Numero_de_amostras
-        possui_croquis = linha.Possui_croquis
-        possui_fotos = linha.Possui_fotos
-        tipo_afloramento = linha.Tipo_de_afloramento
-        in_situ = linha.In_situ
-        intemperismo = linha.Grau_de_intemperismo
-        unidade = linha.Unidade
-        unidade_lito = linha.Unidade_litoestratigrafica
-
         # Título do ponto
-        documento.add_heading(text=ponto, level=2)
+        documento.add_heading(text=linha.Ponto, level=2)
+
+        und = linha.Unidade if not pandas.isna(linha.Unidade) else "<Insira aqui a Unidade>"
+        und_lito = linha.Unidade_litoestratigrafica if not pandas.isna(linha.Unidade_litoestratigrafica) else "<Insira aqui a Unidade Litoestratigráfica>"
 
         # Dicionário com informações que irão para a tabela de cabeçalho
         dados_tabela = {
-            'DATA:': f"{data}",
-            'COORDENADAS:': f"{easting:.0f} E {northing:.0f} N   {src}",
-            'ALTITUDE:': f"{altitude:.0f} m" if not pandas.isna(altitude) else "-",
-            'TOPONÍMIA:': f"{toponimia}" if not pandas.isna(toponimia) else "-",
-            'EQUIPE:': f"{equipe}",
-            'PONTO DE CONTROLE:': f"{ponto_controle}",
-            'TIPO DE AFLORAMENTO:': f"{tipo_afloramento}" if not pandas.isna(tipo_afloramento) else "-",
-            'IN SITU:': f"{in_situ}" if not pandas.isna(in_situ) else "-",
-            'GRAU DE INTEMPERISMO:': f"{intemperismo}" if not pandas.isna(intemperismo) else "-",
-            'AMOSTRAS:': f"{num_amostras}" if num_amostras > 0 else "-",
-            'UNIDADE:': f"{unidade} - {unidade_lito}" if not pandas.isna(unidade) else "-"
+            'DATA:': f"{linha.Data}",
+            'COORDENADAS:': f"{linha.Easting:.0f} E {linha.Northing:.0f} N   {linha.SRC}",
+            'ALTITUDE:': f"{linha.Altitude:.0f} m" if not pandas.isna(linha.Altitude) else "-",
+            'TOPONÍMIA:': f"{linha.Toponimia}" if not pandas.isna(linha.Toponimia) else "-",
+            'EQUIPE:': f"{linha.Equipe}",
+            'PONTO DE CONTROLE:': f"{linha.Ponto_de_controle}",
+            'TIPO DE AFLORAMENTO:': f"{linha.Tipo_de_afloramento}" if not pandas.isna(linha.Tipo_de_afloramento) else "-",
+            'IN SITU:': f"{linha.In_situ}" if not pandas.isna(linha.In_situ) else "-",
+            'GRAU DE INTEMPERISMO:': f"{linha.Grau_de_intemperismo}" if not pandas.isna(linha.Grau_de_intemperismo) else "-",
+            'AMOSTRAS:': f"{linha.Numero_de_amostras}" if linha.Numero_de_amostras > 0 else "-",
+            'UNIDADE:': f"{und if linha.Ponto_de_controle == "Não" else "-"}",
+            'UNIDADE LITOESTRATIGRÁFICA:': f"{und_lito if linha.Ponto_de_controle == "Não" else "-"}",
         }
 
         # Preenche a tabela de cabeçalho
@@ -586,16 +571,16 @@ class Modelo:
         documento.add_paragraph(text="<Descrição do afloramento aqui>", style=self.estilos["normal"])
 
         # Se for um ponto de controle, encerra aqui
-        if ponto_controle == "Sim":
+        if linha.Ponto_de_controle == "Sim":
             return documento
 
         # Adiciona a seção de amostras, se houver alguma
-        if num_amostras > 0:
+        if linha.Numero_de_amostras > 0:
             documento.add_paragraph(text='AMOSTRAS', style=self.estilos["subtitulo"])
             abc = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-            for i in range(0, num_amostras):
+            for i in range(0, linha.Numero_de_amostras):
                 letra = abc[i]
-                documento.add_paragraph(text=f"• {ponto}{letra}: <Descrição da amostra aqui>", style=self.estilos["normal"])
+                documento.add_paragraph(text=f"• {linha.Ponto}{letra}: <Descrição da amostra aqui>", style=self.estilos["normal"])
 
         # Procura medidas estruturais na tabela
         medidas_estruturais = []
@@ -624,7 +609,7 @@ class Modelo:
                 documento.add_paragraph(text=m, style=self.estilos["normal"])
 
         # Adiciona a seção de croquis, se houver algum
-        if possui_croquis:
+        if linha.Possui_croquis:
             documento.add_paragraph(text='CROQUIS', style=self.estilos["subtitulo"])
             documento.add_paragraph(
                 text="<Insira aqui os croquis elaborados para o afloramento e suas "
@@ -633,7 +618,7 @@ class Modelo:
             )
 
         # Adiciona a seção de fotos, se houver alguma
-        if possui_fotos:
+        if linha.Possui_fotos:
             documento.add_paragraph(text='FOTOS', style=self.estilos["subtitulo"])
             documento.add_paragraph(
                 text="<Insira aqui os painéis de fotos tiradas no afloramento e suas "

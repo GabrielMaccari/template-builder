@@ -163,27 +163,27 @@ class BotaoStatus(QPushButton):
                 "icone": QIcon("config/icones/ok.png"),
                 "tooltip": "OK"
             },
-            "missing_column": {
+            "coluna_faltando": {
                 "icone": QIcon("config/icones/not_ok.png"),
                 "tooltip": "Coluna não encontrada na tabela"
             },
-            "wrong_dtype": {
+            "fora_de_formato": {
                 "icone": QIcon("config/icones/not_ok.png"),
                 "tooltip": "A coluna contém dados com\nformato errado"
             },
-            "nan_not_allowed": {
+            "celulas_vazias": {
                 "icone": QIcon("config/icones/not_ok.png"),
                 "tooltip": "A coluna não permite nulos,\nmas existem células vazias"
             },
-            "outside_domain": {
+            "valores_nao_permitidos": {
                 "icone": QIcon("config/icones/not_ok.png"),
                 "tooltip": "Algumas células contêm valores\nfora da lista de valores permitidos"
             },
-            "outside_range": {
+            "fora_do_intervalo": {
                 "icone": QIcon("config/icones/not_ok.png"),
                 "tooltip": "Algumas células contêm valores\nnuméricos fora do intervalo permitido"
             },
-            "not_unique": {
+            "valores_repetidos": {
                 "icone": QIcon("config/icones/not_ok.png"),
                 "tooltip": "Existem valores repetidos"
             }

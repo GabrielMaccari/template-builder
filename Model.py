@@ -230,19 +230,19 @@ class Modelo:
 
             # Checa se a coluna existe na tabela
             if c not in colunas_df:
-                status_colunas.append("missing_column")
+                status_colunas.append("coluna_faltando")
                 continue
 
             # Verifica se existem nulos e se a coluna permite nulos
             if not nulo_ok and df[c].isnull().values.any():
-                status_colunas.append("nan_not_allowed")
+                status_colunas.append("celulas_vazias")
                 continue
 
             # Tenta converter a tabela para o tipo de dado esperado
             try:
                 df[c] = df[c].astype(dtype, errors="raise")
             except ValueError:
-                status_colunas.append("wrong_dtype")
+                status_colunas.append("fora_de_formato")
                 continue
 
             # Verifica se a coluna possui valores controlados e se existe algum valor fora do domínio
@@ -251,7 +251,7 @@ class Modelo:
                 if nulo_ok:
                     valores_coluna.dropna(inplace=True)
                 if not valores_coluna.isin(dominio).all():
-                    status_colunas.append("outside_domain")
+                    status_colunas.append("valores_nao_permitidos")
                     continue
 
             # Verifica se valores numéricos da coluna estão dentro do intervalo esperado
@@ -260,12 +260,12 @@ class Modelo:
                 if nulo_ok:
                     valores_coluna.dropna(inplace=True)
                 if not valores_coluna.between(intervalo[0], intervalo[1]).all():
-                    status_colunas.append("outside_range")
+                    status_colunas.append("fora_do_intervalo")
                     continue
 
             # Checa se existem valores repetidos não-permitidos na coluna
             if unico and not df[c].nunique() == df[c].count():
-                status_colunas.append("not_unique")
+                status_colunas.append("valores_repetidos")
                 continue
 
             status_colunas.append("ok")
@@ -361,29 +361,29 @@ class Modelo:
         dtype_coluna = str(COLUNAS_TABELA_CADERNETA[coluna]["dtype"])
 
         tipos_problemas = {
-            "missing_column": (
+            "coluna_faltando": (
                 f"A coluna \"{coluna}\" não foi encontrada na tabela. "
                 f"Verifique se ela foi excluída ou se você selecionou a tabela errada. "
                 f"Restaure a coluna ou tente novamente com a tabela correta."
             ),
-            "wrong_dtype": (
+            "fora_de_formato": (
                 f"A coluna \"{coluna}\" possui dados fora do formato aceito ({dtype_coluna}) "
                 f"ou fora dos limites esperados para o tipo de dado "
                 f"nas linhas especificadas abaixo. Corrija-os e tente novamente.\n"
             ),
-            "nan_not_allowed": (
+            "celulas_vazias": (
                 f"Existem células vazias nas seguintes linhas da coluna \"{coluna}\". "
                 f"Preencha apropriadamente as células em questão e tente novamente.\n"
             ),
-            "outside_domain": (
+            "valores_nao_permitidos": (
                 f"A coluna \"{coluna}\" possui valores fora da lista de valores permitidos "
                 f"nas seguintes linhas. Corrija-os e tente novamente.\n"
             ),
-            "outside_range": (
+            "fora_do_intervalo": (
                 f"A coluna \"{coluna}\" possui valores fora do intervalo numérico permitido "
                 f"nas seguintes linhas. Corrija-os e tente novamente.\n"
             ),
-            "not_unique": (
+            "valores_repetidos": (
                 f"A coluna \"{coluna}\" possui valores repetidos nas seguintes linhas. "
                 f"Corrija-os e tente novamente.\n"
             )

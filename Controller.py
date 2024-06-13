@@ -99,12 +99,12 @@ class Controlador:
 
         try:
             localizar_problemas = {
-                "missing_column": lambda coluna_faltando: [],
-                "wrong_dtype": self.modelo.localizar_problemas_formato,
-                "nan_not_allowed": self.modelo.localizar_celulas_vazias,
-                "outside_domain": self.modelo.localizar_problemas_dominio,
-                "outside_range": self.modelo.localizar_problemas_intervalo,
-                "not_unique": self.modelo.localizar_valores_repetidos
+                "coluna_faltando": lambda coluna_faltando: [],
+                "fora_de_formato": self.modelo.localizar_problemas_formato,
+                "celulas_vazias": self.modelo.localizar_celulas_vazias,
+                "valores_nao_permitidos": self.modelo.localizar_problemas_dominio,
+                "fora_do_intervalo": self.modelo.localizar_problemas_intervalo,
+                "valores_repetidos": self.modelo.localizar_valores_repetidos
             }
 
             if status not in localizar_problemas.keys():
@@ -175,13 +175,9 @@ def mostrar_dialogo_arquivo(titulo: str, filtro: str, modo="abrir", parent: QMai
     """
     dialog = QFileDialog(parent)
     if modo == "abrir":
-        caminho, tipo = dialog.getOpenFileName(
-            caption=titulo, filter=filtro, parent=parent
-        )
+        caminho, tipo = dialog.getOpenFileName(caption=titulo, filter=filtro, parent=parent)
     else:
-        caminho, tipo = dialog.getSaveFileName(
-            caption=titulo, filter=filtro, parent=parent
-        )
+        caminho, tipo = dialog.getSaveFileName(caption=titulo, filter=filtro, parent=parent)
     return caminho
 
 

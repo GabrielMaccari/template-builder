@@ -30,7 +30,6 @@ TEMPLATE = "config/modelos/template_estilos.docx"
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     app.setStyle("fusion" if OS.startswith("Win") else "Breeze")
-
     # Carrega o template de estilos da caderneta e instancia o controlador
     try:
         model = Modelo(TEMPLATE)

@@ -435,7 +435,10 @@ class Modelo:
         ic(colunas_estrutura)
 
         # Formata as datas
-        df['Data'] = df['Data'].dt.strftime('%d/%m/%Y')
+        try:
+            df['Data'] = df['Data'].dt.strftime('%d/%m/%Y')
+        except AttributeError:
+            pass
 
         # Converte as colunas de Sim ou Não para booleanos
         df["Possui_croquis"] = df["Possui_croquis"].map({"Sim": True, "Não": False})

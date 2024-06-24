@@ -5,10 +5,14 @@
         Ferramenta para preenchimento semiautomático dos cabeçalhos da caderneta de campo compilada para a disciplina de Mapeamento Geológico do curso de graduação
         em Geologia da UFSC.
       </p>
+      <a href="https://github.com/FrostPredator/template-builder/releases/latest">
+        <img alt="Static Badge" src="https://img.shields.io/badge/Download%20-%20Vers%C3%A3o%20mais%20recente%20-%20%231082c3">
+      </a>
       </br>
-     Acesse a página de <a href="https://github.com/FrostPredator/template-builder/releases">releases</a> para baixar.
   <p>
-</div> 
+</div>
+
+
 
 ![panel](https://github.com/FrostPredator/template-builder/assets/114439033/5fed2970-3bc1-433f-8cb7-32f1ce5bd38d)
 

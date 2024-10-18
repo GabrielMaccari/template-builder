@@ -1,152 +1,36 @@
 # -*- coding: utf-8 -*-
-"""
-@author: Gabriel Maccari
-"""
+""" @author: Gabriel Maccari """
 
+import json
 import pandas
 import docx
+import numpy
 from datetime import datetime
 from icecream import ic
 
-COLUNAS_TABELA_CADERNETA = {
-    "Ponto": {
-        "dtype": "object",
-        "nulo_ok": False,
-        "dominio": None,
-        "intervalo": None,
-        "unico": True
-    },
-    "Disciplina": {
-        "dtype": "object",
-        "nulo_ok": False,
-        "dominio": ["Mapeamento Geológico I", "Mapeamento Geológico II"],
-        "intervalo": None,
-        "unico": False
-    },
-    "SRC": {
-        "dtype": "object",
-        "nulo_ok": False,
-        "dominio": None,
-        "intervalo": None,
-        "unico": False
-    },
-    "Easting": {
-        "dtype": "float64",
-        "nulo_ok": False,
-        "dominio": None,
-        "intervalo": (165000, 835000),
-        "unico": False
-    },
-    "Northing": {
-        "dtype": "float64",
-        "nulo_ok": False,
-        "dominio": None,
-        "intervalo": (1099000, 10000000),
-        "unico": False
-    },
-    "Altitude": {
-        "dtype": "float64",
-        "nulo_ok": True,
-        "dominio": None,
-        "intervalo": (0, 8849),
-        "unico": False
-    },
-    "Toponimia": {
-        "dtype": "object",
-        "nulo_ok": True,
-        "dominio": None,
-        "intervalo": None,
-        "unico": False
-    },
-    "Data": {
-        "dtype": "datetime64[ns]",
-        "nulo_ok": False,
-        "dominio": None,
-        "intervalo": None,
-        "unico": False
-    },
-    "Equipe": {
-        "dtype": "object",
-        "nulo_ok": False,
-        "dominio": None,
-        "intervalo": None,
-        "unico": False
-    },
-    "Ponto_de_controle": {
-        "dtype": "object",
-        "nulo_ok": False,
-        "dominio": ["Sim", "Não"],
-        "intervalo": None,
-        "unico": False
-    },
-    "Numero_de_amostras": {
-        "dtype": "int64",
-        "nulo_ok": False,
-        "dominio": None,
-        "intervalo": (0, 255),
-        "unico": False
-    },
-    "Possui_croquis": {
-        "dtype": "object",
-        "nulo_ok": False,
-        "dominio": ["Sim", "Não"],
-        "intervalo": None,
-        "unico": False
-    },
-    "Possui_fotos": {
-        "dtype": "object",
-        "nulo_ok": False,
-        "dominio": ["Sim", "Não"],
-        "intervalo": None,
-        "unico": False
-    },
-    "Tipo_de_afloramento": {
-        "dtype": "object",
-        "nulo_ok": True,
-        "dominio": None,
-        "intervalo": None,
-        "unico": False
-    },
-    "In_situ": {
-        "dtype": "object",
-        "nulo_ok": True,
-        "dominio": ["Sim", "Não"],
-        "intervalo": None,
-        "unico": False
-    },
-    "Grau_de_intemperismo": {
-        "dtype": "object",
-        "nulo_ok": True,
-        "dominio": ["Baixo", "Médio", "Alto"],
-        "intervalo": None,
-        "unico": False
-    },
-    "Unidade": {
-        "dtype": "object",
-        "nulo_ok": True,
-        "dominio": None,
-        "intervalo": None,
-        "unico": False
-    },
-    "Unidade_litoestratigrafica": {
-        "dtype": "object",
-        "nulo_ok": True,
-        "dominio": None,
-        "intervalo": None,
-        "unico": False
-    }
-}
+from Controller import mostrar_popup
+
+COLUNAS_ABA_LISTAS = (
+    "Unidades geológicas",
+    "Unidades litoestratigráficas",
+    "Estruturas planares",
+    "Estruturas lineares",
+    "Áreas/Faixas",
+    "Fases"
+)
 
 
 class Modelo:
-    def __init__(self, caminho_template: str, df: pandas.DataFrame = None):
+    def __init__(self, caminho_template: str, caminho_colunas: str, df: pandas.DataFrame = None):
         self.df = df
         self.caminho_template = None
         self.template = None
+        self.colunas = None
         self.estilos = None
         self.caderneta = None
 
         self.carregar_template(caminho_template)
+        self.carregar_colunas(caminho_colunas)
 
     def carregar_template(self, caminho: str):
         """
@@ -154,7 +38,7 @@ class Modelo:
         :param caminho: Caminho para o documento a ser usado como template.
         :returns: Nada.
         """
-        ic()
+        ic(caminho)
 
         self.caminho_template = caminho
 
@@ -171,22 +55,35 @@ class Modelo:
             "subtitulo": self.template.styles['Subtitle'],
             "titulo_informacao": self.template.styles['Título de informação'],
             "texto_informacao": self.template.styles['Texto de informação'],
+            "anotacao": self.template.styles['Anotação'],
             "legenda": self.template.styles['Caption'],
             "tabela_esquerda": self.template.styles['Tabela - Coluna esquerda'],
             "tabela_direita": self.template.styles['Tabela - Coluna direita'],
             "tabela_cabecalho": self.template.styles['Tabela de cabeçalho'],
         }
 
+    def carregar_colunas(self, caminho: str):
+        """
+        carrega o arquivo JSON de definições das colunas da aba Geral.
+        :param caminho: Caminho para o arquivo JSON contendo as definições das colunas.
+        :returns: Nada.
+        """
+        ic(caminho)
+
+        with open(caminho, 'r', encoding='utf-8') as arquivo:
+            self.colunas = json.load(arquivo)
+
     def abrir_tabela(self, caminho: str) -> object:
         """
-        Abre uma tabela do excel e armazena o DataFrame no atributo "df" do controlador.
+        Abre a planilha de pontos e lê a aba Geral para extrair as informações para a caderneta.
+        Armazena o DataFrame no atributo "df" do controlador.
         :param caminho: O caminho até um arquivo .xlsx ou .xlsm.
         :returns: Boolean dizendo se o DataFrame foi criado com sucesso e Integer com o número de linhas do DataFrame
         """
         ic(caminho)
 
         # Salva a primeira aba da tabela em um DataFrame
-        df = pandas.read_excel(caminho, engine='openpyxl')
+        df = pandas.read_excel(caminho, sheet_name="Geral", engine='openpyxl')
         # Converte os nomes das colunas para string
         df.columns = df.columns.astype(str)
         # Descarta colunas sem nome
@@ -209,6 +106,33 @@ class Modelo:
         else:
             return False, linhas
 
+    def abrir_aba_listas(self, caminho):
+        """
+        Lê a aba Listas da tabela de pontos e usa as listas de opções para especificar o domínio das colunas.
+        :param caminho: O caminho até um arquivo .xlsx ou .xlsm.
+        :returns: Nada.
+        """
+        ic(caminho)
+        df_listas = pandas.read_excel(caminho, sheet_name="Listas", engine='openpyxl')
+
+        try:
+            lista_und_geo = df_listas["Unidades geológicas"].head(30).dropna().to_list()
+            lista_und_lito = df_listas["Unidades litoestratigráficas"].head(30).dropna().to_list()
+            lista_faixas = df_listas["Áreas/Faixas"].head(30).dropna().to_list()
+            lista_fases = df_listas["Fases"].head(30).dropna().to_list()
+        except Exception as e:
+            ic(e)
+            colunas_problema = [c for c in COLUNAS_ABA_LISTAS if c not in df_listas.columns]
+            raise Exception(f"Uma ou mais colunas essenciais estão faltando ou tiveram o cabeçalho modificado na aba de"
+                            f" Listas da tabela:\n\n{", ".join(colunas_problema)}")
+
+        self.colunas["Unidade_geologica_1"]["dominio"] = lista_und_geo
+        self.colunas["Unidade_geologica_2"]["dominio"] = lista_und_geo
+        self.colunas["Unidade_litoestratigrafica_1"]["dominio"] = lista_und_lito
+        self.colunas["Unidade_litoestratigrafica_2"]["dominio"] = lista_und_lito
+        self.colunas["Faixa"]["dominio"] = lista_faixas
+        self.colunas["Fase"]["dominio"] = lista_fases
+
     def checar_colunas(self) -> list[str]:
         """
         Checa se cada coluna esperada para a tabela existe, está no formato correto, contém apenas valores permitidos.
@@ -221,12 +145,12 @@ class Modelo:
         colunas_df = df.columns.to_list()
 
         status_colunas = []
-        for c in COLUNAS_TABELA_CADERNETA:
-            dtype = COLUNAS_TABELA_CADERNETA[c]["dtype"]
-            nulo_ok = COLUNAS_TABELA_CADERNETA[c]["nulo_ok"]
-            dominio = COLUNAS_TABELA_CADERNETA[c]["dominio"]
-            intervalo = COLUNAS_TABELA_CADERNETA[c]["intervalo"]
-            unico = COLUNAS_TABELA_CADERNETA[c]["unico"]
+        for c in self.colunas:
+            dtype = self.colunas[c]["dtype"]
+            nulo_ok = self.colunas[c]["nulo_ok"]
+            dominio = self.colunas[c]["dominio"]
+            intervalo = self.colunas[c]["intervalo"]
+            unico = self.colunas[c]["unico"]
 
             # Checa se a coluna existe na tabela
             if c not in colunas_df:
@@ -294,7 +218,7 @@ class Modelo:
         ic(coluna)
 
         valores_coluna = self.df[coluna].dropna()
-        tipo_alvo = COLUNAS_TABELA_CADERNETA[coluna]["dtype"]
+        tipo_alvo = self.colunas[coluna]["dtype"]
 
         funcoes_conversao = {
             "datetime64[ns]": pandas.to_datetime(valores_coluna, errors="coerce", format="%d/%m/%Y").isna(),
@@ -331,7 +255,7 @@ class Modelo:
         ic(coluna)
 
         valores_coluna = self.df.loc[:, coluna]
-        dominio = COLUNAS_TABELA_CADERNETA[coluna]["dominio"]
+        dominio = self.colunas[coluna]["dominio"]
         indices_problemas = valores_coluna.index[~valores_coluna.isin(dominio)].tolist()
         return indices_problemas
 
@@ -344,7 +268,7 @@ class Modelo:
         ic(coluna)
 
         valores_coluna = self.df.loc[:, coluna]
-        intervalo = COLUNAS_TABELA_CADERNETA[coluna]["intervalo"]
+        intervalo = self.colunas[coluna]["intervalo"]
         indices_problemas = valores_coluna.index[~valores_coluna.between(intervalo[0], intervalo[1])].tolist()
         return indices_problemas
 
@@ -358,7 +282,7 @@ class Modelo:
         """
         ic(tipo_problema, coluna, indices)
 
-        dtype_coluna = str(COLUNAS_TABELA_CADERNETA[coluna]["dtype"])
+        dtype_coluna = str(self.colunas[coluna]["dtype"])
 
         tipos_problemas = {
             "coluna_faltando": (
@@ -398,17 +322,17 @@ class Modelo:
 
         return "\n".join(mensagem)
 
-    def gerar_caderneta(self, montar_folha_de_rosto: bool = True, montar_folhas_semestre: bool = True,
+    def gerar_caderneta(self, montar_folha_de_rosto: bool = True, montar_folhas_fase: bool = True,
                         indice_inicio: int | pandas.Index = 0, continuar_caderneta: str = None):
         """
         Gera a caderneta pré-preenchida.
         :param montar_folha_de_rosto: Opção para gerar ou não uma folha de rosto.
-        :param montar_folhas_semestre: Opção para gerar ou não páginas de título das disciplinas.
+        :param montar_folhas_fase: Opção para gerar ou não páginas de título das disciplinas.
         :param indice_inicio: O índice do DataFrame (ponto) no qual a montagem da caderneta deve iniciar.
         :param continuar_caderneta: O caminho para uma caderneta pré-existente a ser continuada (.docx). Opcional.
         :returns: Nada.
         """
-        ic(montar_folha_de_rosto, montar_folhas_semestre, indice_inicio, continuar_caderneta)
+        ic(montar_folha_de_rosto, montar_folhas_fase, indice_inicio, continuar_caderneta)
 
         # Essa linha evitava um bug que stackava cadernetas quando mais de uma era gerada na mesma execução da
         # ferramenta. Eu não sei se esse bug ainda acontece, mas deixei a linha aqui por garantia
@@ -429,46 +353,34 @@ class Modelo:
         df = self.df
         colunas_tabela = df.columns.to_list()
 
-        # Na tabela da caderneta, as colunas 19-38 são slots para medidas estruturais
-        colunas_estrutura = (colunas_tabela[18:] if len(colunas_tabela) < 38
-                             else colunas_tabela[18:38])
-        ic(colunas_estrutura)
-
         # Formata as datas
         try:
             df['Data'] = df['Data'].dt.strftime('%d/%m/%Y')
         except AttributeError:
             pass
 
-        # Converte as colunas de Sim ou Não para booleanos
-        df["Possui_croquis"] = df["Possui_croquis"].map({"Sim": True, "Não": False})
-        df["Possui_fotos"] = df["Possui_fotos"].map({"Sim": True, "Não": False})
+        fase = None
 
         # Monta a folha de rosto da caderneta
         if montar_folha_de_rosto:
             documento = self.montar_folha_rosto(documento)
-
-        # Checa qual a diciplina/semestre do primeiro ponto a ser usado
-        disciplina_inicio = self.df.loc[indice_inicio, "Disciplina"].iloc[0]
-        d = 1 if disciplina_inicio == "Mapeamento Geológico I" else 2  # Número sequencial do semestre/disciplina. Ex: Map1 = 1
-        disciplinas = COLUNAS_TABELA_CADERNETA["Disciplina"]["dominio"]
 
         for linha in df.itertuples():
             # Pula linhas até chegar ao ponto de início
             if linha.Index < indice_inicio:
                 continue
 
-            if montar_folhas_semestre:
+            if montar_folhas_fase:
                 # Adiciona uma página de título antes do primeiro ponto de cada semestre/disciplina
-                if d <= 2 and linha.Disciplina == disciplinas[d-1]:
-                    documento = self.montar_pagina_semestre(documento, linha.Disciplina)
-                    d += 1
+                if linha.Fase != fase:
+                    fase = linha.Fase
+                    self.montar_pagina_fase(documento, fase)
 
             # Quebra a página antes do título do ponto
             documento.paragraphs[-1].add_run().add_break(docx.enum.text.WD_BREAK.PAGE)
 
             # Adiciona a página do ponto
-            documento = self.montar_pagina_ponto(documento, linha, colunas_estrutura)
+            documento = self.montar_pagina_ponto(documento, linha)
 
         self.caderneta = documento
 
@@ -485,13 +397,13 @@ class Modelo:
                 documento.add_paragraph(text='CADERNETA DE CAMPO COMPILADA',
                                         style=self.estilos["titulo"])
             elif i == 13:
-                documento.add_paragraph(text='MAPEAMENTO GEOLÓGICO UFSC',
+                documento.add_paragraph(text='MAPEAMENTO GEOLÓGICO',
                                         style=self.estilos["titulo_informacao"])
             else:
                 documento.add_paragraph(text='', style=self.estilos['normal'])
 
         lista_infos = ['PROJETO:', 'ANO:', 'PROFESSORES RESPONSÁVEIS:',
-                       'NÚMERO DA ÁREA/FAIXA:', 'INTEGRANTES DO GRUPO:']
+                       'ÁREA/FAIXA:', 'INTEGRANTES DO GRUPO:']
 
         for info in lista_infos:
             documento.add_paragraph(text=info, style=self.estilos["titulo_informacao"])
@@ -499,14 +411,14 @@ class Modelo:
 
         return documento
 
-    def montar_pagina_semestre(self, documento: docx.Document, disciplina: str) -> docx.Document:
+    def montar_pagina_fase(self, documento: docx.Document, fase: str) -> docx.Document:
         """
         Adiciona uma página de título à caderneta para dividir os semestres do mapeamento geológico.
         :param documento: O documento.
-        :param disciplina: "Mapeamento Geológico I" ou "Mapeamento Geológico II".
+        :param fase: "Mapeamento Geológico I" ou "Mapeamento Geológico II".
         :returns: O documento com a página de título do semestre.
         """
-        ic(disciplina)
+        ic(fase)
 
         try:  # Quando não há folha de rosto, o documento está inicialmente vazio, e isso causa um IndexError
             documento.paragraphs[-1].add_run().add_break(docx.enum.text.WD_BREAK.PAGE)
@@ -514,17 +426,15 @@ class Modelo:
             pass
         for i in range(0, 18):
             documento.add_paragraph(text='', style=self.estilos["normal"])
-        documento.add_heading(text=disciplina, level=1)
+        documento.add_heading(text=fase, level=1)
 
         return documento
 
-    def montar_pagina_ponto(self, documento: docx.Document, linha: pandas.core.frame.pandas,
-                            colunas_estrutura: list[str]) -> docx.Document:
+    def montar_pagina_ponto(self, documento: docx.Document, linha: pandas.core.frame.pandas) -> docx.Document:
         """
         Acrescenta uma página de informações de um ponto à caderneta.
         :param documento: O documento
-        :param linha: Duplas de rótulos e valores da linha do DataFrame (gerado via DataFrame.itertuples().
-        :param colunas_estrutura: Os nomes das colunas de medidas estruturais presentes na tabela.
+        :param linha: Duplas de rótulos e valores da linha do DataFrame (gerado via DataFrame.itertuples()).
         :returns: O documento com a página do ponto.
         """
         ic(linha.Ponto)
@@ -532,22 +442,34 @@ class Modelo:
         # Título do ponto
         documento.add_heading(text=linha.Ponto, level=2)
 
-        und = linha.Unidade if not pandas.isna(linha.Unidade) else "<Insira aqui a Unidade>"
-        und_lito = linha.Unidade_litoestratigrafica if not pandas.isna(linha.Unidade_litoestratigrafica) else "<Insira aqui a Unidade Litoestratigráfica>"
+        # Dados que são omitidos em pontos de controle
+        und_geo_1 = linha.Unidade_geologica_1 if not pandas.isna(linha.Unidade_geologica_1) else "<Insira aqui a unidade>"
+        und_geo_2 = linha.Unidade_geologica_2 if not pandas.isna(linha.Unidade_geologica_2) else None
+        und_geo = f"{und_geo_1} / {und_geo_2}" if (und_geo_1 and und_geo_2) and (und_geo_1 != und_geo_2) else und_geo_1
+
+        und_lito_1 = linha.Unidade_litoestratigrafica_1 if not pandas.isna(linha.Unidade_litoestratigrafica_1) else "<Insira aqui a unidade>"
+        und_lito_2 = linha.Unidade_litoestratigrafica_2 if not pandas.isna(linha.Unidade_litoestratigrafica_2) else None
+        und_lito = f"{und_lito_1} / {und_lito_2}" if (und_lito_1 and und_lito_2) and (und_lito_1 != und_lito_2) else und_lito_1
+
+        tipo_afloramento = linha.Tipo_de_afloramento if not pandas.isna(linha.Tipo_de_afloramento) else "-"
+        in_situ = linha.In_situ if not pandas.isna(linha.In_situ) else "-"
+        grau_intemperismo = linha.Grau_de_intemperismo if not pandas.isna(linha.Grau_de_intemperismo) else "-"
+        amostras = linha.Numero_de_amostras if linha.Numero_de_amostras > 0 else "-"
 
         # Dicionário com informações que irão para a tabela de cabeçalho
         dados_tabela = {
             'DATA:': f"{linha.Data}",
             'COORDENADAS:': f"{linha.Easting:.0f} E {linha.Northing:.0f} N   {linha.SRC}",
             'ALTITUDE:': f"{linha.Altitude:.0f} m" if not pandas.isna(linha.Altitude) else "-",
+            'MUNICÍPIO:': f"{linha.Municipio} - {linha.UF}",
             'TOPONÍMIA:': f"{linha.Toponimia}" if not pandas.isna(linha.Toponimia) else "-",
             'EQUIPE:': f"{linha.Equipe}",
             'PONTO DE CONTROLE:': f"{linha.Ponto_de_controle}",
-            'TIPO DE AFLORAMENTO:': f"{linha.Tipo_de_afloramento}" if not pandas.isna(linha.Tipo_de_afloramento) else "-",
-            'IN SITU:': f"{linha.In_situ}" if not pandas.isna(linha.In_situ) else "-",
-            'GRAU DE INTEMPERISMO:': f"{linha.Grau_de_intemperismo}" if not pandas.isna(linha.Grau_de_intemperismo) else "-",
-            'AMOSTRAS:': f"{linha.Numero_de_amostras}" if linha.Numero_de_amostras > 0 else "-",
-            'UNIDADE:': f"{und if linha.Ponto_de_controle == "Não" else "-"}",
+            'TIPO DE AFLORAMENTO:': f"{tipo_afloramento if linha.Ponto_de_controle == "Não" else "-"}",
+            'IN SITU:': f"{in_situ if linha.Ponto_de_controle == "Não" else "-"}",
+            'GRAU DE INTEMPERISMO:': f"{grau_intemperismo if linha.Ponto_de_controle == "Não" else "-"}",
+            'AMOSTRAS:': f"{amostras if linha.Ponto_de_controle == "Não" else "-"}",
+            'UNIDADE GEOLÓGICA:': f"{und_geo if linha.Ponto_de_controle == "Não" else "-"}",
             'UNIDADE LITOESTRATIGRÁFICA:': f"{und_lito if linha.Ponto_de_controle == "Não" else "-"}",
         }
 
@@ -570,64 +492,52 @@ class Modelo:
             celula.width = docx.shared.Inches(3.8)
 
         # Adiciona a seção de descrição do ponto
-        documento.add_paragraph(text='DESCRIÇÃO', style=self.estilos["subtitulo"])
-        documento.add_paragraph(text="<Descrição do afloramento aqui>", style=self.estilos["normal"])
+        documento.add_paragraph(text="DESCRIÇÃO", style=self.estilos["subtitulo"])
+        documento.add_paragraph(text="<Descrição do ponto aqui>", style=self.estilos["normal"])
 
         # Se for um ponto de controle, encerra aqui
         if linha.Ponto_de_controle == "Sim":
             return documento
 
-        # Adiciona a seção de amostras, se houver alguma
+        # Adiciona a seção de amostras
+        documento.add_paragraph(text="AMOSTRAS", style=self.estilos["subtitulo"])
         if linha.Numero_de_amostras > 0:
-            documento.add_paragraph(text='AMOSTRAS', style=self.estilos["subtitulo"])
-            abc = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+            abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
             for i in range(0, linha.Numero_de_amostras):
                 letra = abc[i]
-                documento.add_paragraph(text=f"• {linha.Ponto}{letra}: <Descrição da amostra aqui>", style=self.estilos["normal"])
+                documento.add_paragraph(
+                    text=f"• {linha.Ponto}{letra}: <Descrição da amostra aqui>",
+                    style=self.estilos["normal"]
+                )
+        else:
+            documento.add_paragraph(text=f"• XXX-YYYYZ: <Descrição da amostra aqui>", style=self.estilos["normal"])
+            documento.add_paragraph(text=f"REMOVA esta seção caso não haja amostras.", style=self.estilos["anotacao"])
 
-        # Procura medidas estruturais na tabela
-        medidas_estruturais = []
-        for i, coluna in enumerate(colunas_estrutura):
-            # Se a coluna for uma das colunas essenciais, pula ela
-            # Obs: Se isso acontecer, significa que o usuário inseriu alguma coluna adicional na tabela
-            if coluna in COLUNAS_TABELA_CADERNETA.keys():
-                continue
-            # Conteúdo do campo
-            medida = linha[i + 19]
-            # Se não for uma célula vazia
-            if not pandas.isna(medida):
-                # Procura uma sigla entre parênteses
-                if '(' in coluna and ')' in coluna:
-                    sigla = coluna[coluna.find("(") + 1:coluna.find(")")]
-                # Se não encontrar sigla, usa o nome da coluna
-                else:
-                    sigla = coluna.replace('_', ' ')
-                # Adiciona as medidas a uma lista
-                medidas_estruturais.append(f"• {sigla} = {medida}")
+        # Adiciona a seção de medidas estruturais
+        documento.add_paragraph(text="MEDIDAS ESTRUTURAIS", style=self.estilos["subtitulo"])
+        documento.add_paragraph(text="• <sigla> = <medida>", style=self.estilos["normal"])
+        documento.add_paragraph(
+            text=f"Use a notação xxx/yy para estruturas planares e yy-xxx para estruturas lineares, onde xxx = sentido "
+                 f"de mergulho (dip direction ou trend) e yy = ângulo de mergulho (dip ou plunge). Ex: Lb = 20-180.",
+            style=self.estilos["anotacao"]
+        )
+        documento.add_paragraph(text=f"REMOVA esta seção caso não haja medidas.", style=self.estilos["anotacao"])
 
-        # Adiciona a seção de medidas, se houver alguma
-        if len(medidas_estruturais) > 0:
-            documento.add_paragraph(text='MEDIDAS ESTRUTURAIS', style=self.estilos["subtitulo"])
-            for m in medidas_estruturais:
-                documento.add_paragraph(text=m, style=self.estilos["normal"])
+        # Adiciona a seção de croquis
+        documento.add_paragraph(text="CROQUIS", style=self.estilos["subtitulo"])
+        documento.add_paragraph(
+            text="<Insira aqui os croquis elaborados para o afloramento e suas respectivas legendas>",
+            style=self.estilos["normal"]
+        )
+        documento.add_paragraph(text=f"REMOVA esta seção caso não haja croquis.", style=self.estilos["anotacao"])
 
-        # Adiciona a seção de croquis, se houver algum
-        if linha.Possui_croquis:
-            documento.add_paragraph(text='CROQUIS', style=self.estilos["subtitulo"])
-            documento.add_paragraph(
-                text="<Insira aqui os croquis elaborados para o afloramento e suas "
-                     "respectivas legendas. Remova esta seção caso não haja croquis>",
-                style=self.estilos["normal"]
-            )
-
-        # Adiciona a seção de fotos, se houver alguma
-        if linha.Possui_fotos:
-            documento.add_paragraph(text='FOTOS', style=self.estilos["subtitulo"])
-            documento.add_paragraph(
-                text="<Insira aqui os painéis de fotos tiradas no afloramento e suas "
-                     "respectivas legendas. Remova esta seção caso não haja fotos>",
-                style=self.estilos["normal"]
-            )
+        # Adiciona a seção de fotos
+        documento.add_paragraph(text="FOTOS", style=self.estilos["subtitulo"])
+        documento.add_paragraph(
+            text="<Insira aqui os painéis de fotos tiradas no afloramento e suas respectivas legendas>",
+            style=self.estilos["normal"]
+        )
+        documento.add_paragraph(text=f"REMOVA esta seção caso não haja fotos.", style=self.estilos["anotacao"])
 
         return documento
 
@@ -639,21 +549,13 @@ class Modelo:
         """
         ic(caminho)
 
-        self.caderneta.core_properties.author = "Geologia UFSC"
+        self.caderneta.core_properties.title = "Caderneta de Campo Compilada"
+        self.caderneta.core_properties.author = "Template Builder"
         self.caderneta.core_properties.category = "Relatório Técnico"
-        self.caderneta.core_properties.comments = ("Caderneta de campo compilada elaborada na disciplina de Mapeamento "
-                                                   "Geológico do curso de graduação em Geologia da UFSC")
-        self.caderneta.core_properties.content_status = "Modelo"
         self.caderneta.core_properties.created = datetime.now()
-        self.caderneta.core_properties.identifier = None
         self.caderneta.core_properties.keywords = "Geologia, Mapeamento Geológico"
         self.caderneta.core_properties.language = "Português (Brasil)"
-        self.caderneta.core_properties.last_modified_by = "Geologia UFSC"
-        self.caderneta.core_properties.modified = datetime.now()
-        self.caderneta.core_properties.revision = 1
         self.caderneta.core_properties.subject = "Geologia"
-        self.caderneta.core_properties.title = "Caderneta de Campo Compilada"
-        self.caderneta.core_properties.version = "v1"
 
         if not caminho.endswith(".docx"):
             caminho += ".docx"

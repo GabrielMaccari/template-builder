@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-@author: Gabriel Maccari
-"""
+""" @author: Gabriel Maccari """
 
 import sys
 from platform import platform
@@ -14,33 +12,40 @@ from View import Interface
 from Controller import Controlador, mostrar_popup
 
 ic.configureOutput(prefix='LOG| ', includeContext=True)
-"""
-# Configuração para geração de logs de execução (Obs: NÃO FUNCIONA COM PYINSTALLER!!!)
-def log_to_file(text, mode='a'):
-    with open("log.log", mode, encoding="utf-8") as f:
-        f.write(f"{text}\n")
-ic.configureOutput(prefix='LOG| ', includeContext=True, outputFunction=log_to_file)
-log_to_file("------------------ LOG DA ÚLTIMA EXECUÇÃO ------------------", 'w')
-# ------------------------------------------------------------------------------------
-"""
 
 OS = platform()
-TEMPLATE = "config/modelos/template_estilos.docx"
+
+TEMPLATE_ESTILOS = "config/template_estilos.docx"
+JSON_COLUNAS = "config/colunas_aba_geral.json"
+
+
+def erro_dependencia(arquivo, excecao):
+    ic(excecao)
+    mostrar_popup(
+        f"Dependência não encontrada: {arquivo}. Restaure o arquivo a partir do repositório e tente novamente.",
+        tipo_msg="erro",
+    )
+    sys.exit()
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     app.setStyle("fusion" if OS.startswith("Win") else "Breeze")
-    # Carrega o template de estilos da caderneta e instancia o controlador
+
     try:
-        model = Modelo(TEMPLATE)
-        view = Interface()
-        controller = Controlador(model, view)
-    except PackageNotFoundError:
-        mostrar_popup(
-            f"Dependência não encontrada: {TEMPLATE}. Restaure o arquivo a "
-            f"partir do repositório e tente novamente.",
-            tipo_msg="erro",
-        )
-        sys.exit()
+        # Checa se o arquivo de definição das colunas existe
+        with open(JSON_COLUNAS, 'r'):
+            pass
+
+        # Inicializa os componentes
+        model = Modelo(TEMPLATE_ESTILOS, JSON_COLUNAS)
+        view = Interface(model.colunas)
+        Controlador(model, view)
+
+    except PackageNotFoundError as erro:
+        erro_dependencia(TEMPLATE_ESTILOS, erro)
+
+    except FileNotFoundError as erro:
+        erro_dependencia(JSON_COLUNAS, erro)
 
     app.exec()

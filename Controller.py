@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-@author: Gabriel Maccari
-"""
+""" @author: Gabriel Maccari """
 
 from PyQt6.QtWidgets import *
 from PyQt6.QtGui import QIcon
@@ -57,6 +55,9 @@ class Controlador:
             self.interface.num_pontos.setText(str(num_pontos) if num_pontos > 0 else "-")
             self.interface.combobox_ponto_inicio.clear()
             self.interface.combobox_ponto_inicio.addItems(self.modelo.df["Ponto"])
+
+            self.modelo.abrir_aba_listas(caminho)
+
             self.checar_colunas()
 
             if "nan" in self.modelo.df.columns:
@@ -159,6 +160,11 @@ class Controlador:
             if caminho_saida != "":
                 self.modelo.salvar_caderneta(caminho_saida)
                 mostrar_popup("Caderneta criada com sucesso!")
+        except PermissionError as exception:
+            mostrar_popup(f"Erro ao salvar a caderneta. Verifique se o arquivo {caminho_saida} não está aberto"
+                          f" em outro programa e se você possui privilégios para salvar na pasta selecionada.",
+                          tipo_msg="erro", parent=self.interface)
+            ic(exception)
         except Exception as exception:
             mostrar_popup(f"{exception}", tipo_msg="erro", parent=self.interface)
             ic(exception)

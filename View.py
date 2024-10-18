@@ -1,18 +1,16 @@
 # -*- coding: utf-8 -*-
-"""
-@author: Gabriel Maccari
-"""
+""" @author: Gabriel Maccari """
 
 from PyQt6.QtWidgets import *
 from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import Qt
 
-from Model import COLUNAS_TABELA_CADERNETA
-
 
 class Interface(QMainWindow):
-    def __init__(self):
+    def __init__(self, colunas):
         super(Interface, self).__init__(None)
+
+        self.colunas = colunas
 
         # Função a ser executada quando o usuário clica nos ícones de status das colunas (é definida no controlador)
         self.funcao_botoes_status = None
@@ -48,24 +46,25 @@ class Interface(QMainWindow):
 
         # Cria os rótulos das colunas e botões de status em listas e adiciona-os ao layout em grade da seção central
         self.rotulos_colunas, self.botoes_status = [], []
+        linhas_por_coluna = (len(self.colunas) // 2) - (1 if len(self.colunas) % 2 == 0 else 0)
         lin, col = 0, 0
-        for i, coluna in enumerate(COLUNAS_TABELA_CADERNETA):
+        for i, coluna in enumerate(self.colunas):
             self.rotulos_colunas.append(QLabel(coluna))
             self.botoes_status.append(BotaoStatus(coluna, self))
 
             layout_central.addWidget(self.rotulos_colunas[i], lin, col)
             layout_central.addWidget(self.botoes_status[i], lin, col + 1)
 
-            col = col if lin != 8 else col + 3
-            lin = lin + 1 if lin != 8 else 0
+            col = col if lin < linhas_por_coluna else col + 3
+            lin = lin + 1 if lin < linhas_por_coluna else 0
 
         # Rótulos para exibir o número de linhas (pontos meapeados) na tabela
         rotulo_num_pontos = QLabel("Número de pontos na tabela: ")
         self.num_pontos = QLabel("-")
         self.num_pontos.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        layout_central.addWidget(rotulo_num_pontos, 9, 0)
-        layout_central.addWidget(self.num_pontos, 9, 1)
+        layout_central.addWidget(rotulo_num_pontos, linhas_por_coluna + 1, 0)
+        layout_central.addWidget(self.num_pontos, linhas_por_coluna + 1, 1)
 
         # Linha que separa a porção central da porção inferior da interface
         separador2 = QFrame(None)
@@ -79,9 +78,9 @@ class Interface(QMainWindow):
         self.checkbox_folha_rosto.setChecked(True)
 
         # Checkbox para marcar se gera ou não as folhas de título dos semestres
-        self.checkbox_folhas_semestre = QCheckBox("Incluir folhas de título para cada semestre/disciplina")
-        self.checkbox_folhas_semestre.setToolTip("Gera páginas com o título da disciplina antes do primeiro ponto de "
-                                                 "cada semestre")
+        self.checkbox_folhas_semestre = QCheckBox("Incluir folhas de título para cada fase")
+        self.checkbox_folhas_semestre.setToolTip("Gera páginas com o título da fase (ou disciplina) antes do primeiro "
+                                                 "ponto de cada fase")
         self.checkbox_folhas_semestre.setChecked(True)
 
         # Checkbox para marcar se o usuário deseja continuar uma caderneta já existente

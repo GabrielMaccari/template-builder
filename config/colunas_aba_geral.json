@@ -1,0 +1,209 @@
+{
+    "Ponto": {
+        "dtype": "object",
+        "nulo_ok": false,
+        "dominio": null,
+        "intervalo": null,
+        "unico": true
+    },
+    "Faixa": {
+        "dtype": "object",
+        "nulo_ok": true,
+        "dominio": null,
+        "intervalo": null,
+        "unico": false
+    },
+    "Fase": {
+        "dtype": "object",
+        "nulo_ok": false,
+        "dominio": null,
+        "intervalo": null,
+        "unico": null
+    },
+    "SRC": {
+        "dtype": "object",
+        "nulo_ok": false,
+        "dominio": null,
+        "intervalo": null,
+        "unico": false
+    },
+    "Easting": {
+        "dtype": "float64",
+        "nulo_ok": false,
+        "dominio": null,
+        "intervalo": [
+            165000,
+            835000
+        ],
+        "unico": false
+    },
+    "Northing": {
+        "dtype": "float64",
+        "nulo_ok": false,
+        "dominio": null,
+        "intervalo": [
+            1099000,
+            10000000
+        ],
+        "unico": false
+    },
+    "Altitude": {
+        "dtype": "float64",
+        "nulo_ok": true,
+        "dominio": null,
+        "intervalo": [
+            0,
+            8849
+        ],
+        "unico": false
+    },
+    "UF": {
+        "dtype": "object",
+        "nulo_ok": false,
+        "dominio": [
+            "AC",
+            "AL",
+            "AP",
+            "AM",
+            "BA",
+            "CE",
+            "DF",
+            "ES",
+            "GO",
+            "MA",
+            "MT",
+            "MS",
+            "MG",
+            "PA",
+            "PB",
+            "PR",
+            "PE",
+            "PI",
+            "RJ",
+            "RN",
+            "RS",
+            "RO",
+            "RR",
+            "SC",
+            "SP",
+            "SE",
+            "TO"
+        ],
+        "intervalo": null,
+        "unico": false
+    },
+    "Municipio": {
+        "dtype": "object",
+        "nulo_ok": false,
+        "dominio": null,
+        "intervalo": null,
+        "unico": false
+    },
+    "Toponimia": {
+        "dtype": "object",
+        "nulo_ok": true,
+        "dominio": null,
+        "intervalo": null,
+        "unico": false
+    },
+    "Data": {
+        "dtype": "datetime64[ns]",
+        "nulo_ok": false,
+        "dominio": null,
+        "intervalo": null,
+        "unico": false
+    },
+    "Equipe": {
+        "dtype": "object",
+        "nulo_ok": false,
+        "dominio": null,
+        "intervalo": null,
+        "unico": false
+    },
+    "Ponto_de_controle": {
+        "dtype": "object",
+        "nulo_ok": false,
+        "dominio": [
+            "Sim",
+            "Não"
+        ],
+        "intervalo": null,
+        "unico": false
+    },
+    "Numero_de_amostras": {
+        "dtype": "int64",
+        "nulo_ok": false,
+        "dominio": null,
+        "intervalo": [
+            0,
+            255
+        ],
+        "unico": false
+    },
+    "Amostra_laminada": {
+        "dtype": "object",
+        "nulo_ok": false,
+        "dominio": [
+            "Sim",
+            "Não"
+        ],
+        "intervalo": null,
+        "unico": false
+    },
+    "Tipo_de_afloramento": {
+        "dtype": "object",
+        "nulo_ok": true,
+        "dominio": null,
+        "intervalo": null,
+        "unico": false
+    },
+    "In_situ": {
+        "dtype": "object",
+        "nulo_ok": true,
+        "dominio": [
+            "Sim",
+            "Não"
+        ],
+        "intervalo": null,
+        "unico": false
+    },
+    "Grau_de_intemperismo": {
+        "dtype": "object",
+        "nulo_ok": true,
+        "dominio": [
+            "Baixo",
+            "Médio",
+            "Alto"
+        ],
+        "intervalo": null,
+        "unico": false
+    },
+    "Unidade_geologica_1": {
+        "dtype": "object",
+        "nulo_ok": true,
+        "dominio": null,
+        "intervalo": null,
+        "unico": false
+    },
+    "Unidade_litoestratigrafica_1": {
+        "dtype": "object",
+        "nulo_ok": true,
+        "dominio": null,
+        "intervalo": null,
+        "unico": false
+    },
+    "Unidade_geologica_2": {
+        "dtype": "object",
+        "nulo_ok": true,
+        "dominio": null,
+        "intervalo": null,
+        "unico": false
+    },
+    "Unidade_litoestratigrafica_2": {
+        "dtype": "object",
+        "nulo_ok": true,
+        "dominio": null,
+        "intervalo": null,
+        "unico": false
+    }
+}

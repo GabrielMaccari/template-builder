@@ -122,7 +122,7 @@ class Controlador:
 
     def checkbox_continuar_caderneta_clicada(self):
         """
-        Atualiza a interface e permite ao usuário selecionar um arquivo de template para continuar uma caderneta.
+        Permite ao usuário selecionar uma caderneta pré-existente para ser continuada.
         :returns: Nada.
         """
         ic()
@@ -136,6 +136,12 @@ class Controlador:
             )
         else:
             self.caminho_caderneta = None
+
+        if continuar_caderneta and (self.caminho_caderneta == "" or self.caminho_caderneta is None):
+            self.interface.checkbox_continuar_caderneta.setChecked(False)
+            continuar_caderneta = False
+
+        self.interface.checkbox_folha_rosto.setEnabled(not continuar_caderneta)
         self.interface.rotulo_ponto_inicio.setEnabled(continuar_caderneta)
         self.interface.combobox_ponto_inicio.setEnabled(continuar_caderneta)
 

@@ -24,7 +24,7 @@ class Interface(QMainWindow):
 
         # Botão para selecionar a tabela
         self.botao_abrir_arquivo = QPushButton("Selecionar")
-        self.botao_abrir_arquivo.setMaximumWidth(75)
+        self.botao_abrir_arquivo.setMaximumWidth(76)
 
         # Layout que organiza a porção superior da interface (acima da linha)
         layout_superior = QHBoxLayout()
